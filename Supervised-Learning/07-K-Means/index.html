@@ -6,6 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>K-Means Clustering — Unsupervised Learning</title>
 <style>
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#164e63,#0891b2);padding:56px 24px;text-align:center}
@@ -52,6 +53,7 @@
 </style>
 </head>
 <body>
+<div id="sr" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <header>
   <div class="badge">UNSUPERVISED LEARNING · CLUSTERING</div>
   <h1>K-Means Clustering</h1>
@@ -161,6 +163,7 @@
 
 <script>
 const cv = document.getElementById('demo');
+function announce(m){ const el=document.getElementById('sr'); if(el) el.textContent=m; }
 const ctx = cv.getContext('2d');
 const W = cv.width, H = cv.height;
 const PAD = 30;
@@ -296,6 +299,7 @@ document.getElementById('runBtn').onclick = ()=>{
   if(!pts.length) return;
   if(!centroids.length){ initCentroids(); }
   running=true;
+  announce('เริ่ม K-Means (k=' + k + ')');
   document.getElementById('runBtn').textContent='⏸ หยุด';
   setStatus('กำลังทำงาน...');
   timer = setInterval(()=>{
@@ -307,6 +311,7 @@ document.getElementById('runBtn').onclick = ()=>{
       running=false; clearInterval(timer); timer=null;
       document.getElementById('runBtn').textContent='▶ เริ่ม K-Means';
       setStatus('✅ ครบวงจรแล้ว (converged)');
+      announce('ครบวงจรแล้ว (converged) — iter ' + iter + ', SSE ' + document.getElementById('sse').textContent);
     }
   }, 120);
 };
@@ -314,8 +319,8 @@ document.getElementById('stepBtn').onclick = ()=>{
   if(!centroids.length) initCentroids();
   step();
 };
-document.getElementById('clearBtn').onclick = ()=>{ pts=[]; reset(); };
-document.getElementById('sampleBtn').onclick = sample;
+document.getElementById('clearBtn').onclick = ()=>{ pts=[]; reset(); announce('ล้างจุดทั้งหมดแล้ว'); };
+document.getElementById('sampleBtn').onclick = ()=>{ sample(); announce('สร้างข้อมูลตัวอย่าง ' + pts.length + ' จุด (k=' + k + ')'); };
 
 sample();
 </script>

@@ -6,6 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Logistic Regression — Supervised Learning</title>
 <style>
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#7c2d12,#ea580c);padding:56px 24px;text-align:center}
@@ -54,6 +55,7 @@
 </style>
 </head>
 <body>
+<div id="sr" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <header>
   <div class="badge">SUPERVISED LEARNING · CLASSIFICATION</div>
   <h1>Logistic Regression</h1>
@@ -172,6 +174,7 @@
 
 <script>
 const cv = document.getElementById('demo');
+function announce(m){ const el=document.getElementById('sr'); if(el) el.textContent=m; }
 const ctx = cv.getContext('2d');
 const W = cv.width, H = cv.height;
 const PAD = 50;
@@ -197,6 +200,7 @@ function randomData(n=26){
   w1=0; w2=0; b=0; epoch=0;
   stopTrain();
   update();
+  announce('สุ่มข้อมูลใหม่ ' + n + ' จุด');
 }
 
 function normalize(p){ return {x:(p.x-W/2)/200, y:(p.y-H/2)/200}; }
@@ -301,16 +305,17 @@ document.getElementById('trainBtn').onclick = ()=>{
   if(training){ stopTrain(); return; }
   if(!pts.length) return;
   training=true;
+  announce('เริ่มฝึก Logistic Regression (Gradient Descent)');
   document.getElementById('trainBtn').textContent='⏸ หยุด';
   trainIv = setInterval(()=>{
     if(!training || !pts.length){ stopTrain(); return; }   // ล้างข้อมูลกลางคัน → หยุดเอง ไม่ค้าง
     trainStep();
-    if(epoch>=maxEpochs){ stopTrain(); }
+    if(epoch>=maxEpochs){ stopTrain(); announce('ฝึกเสร็จ — Loss ' + loss() + ', Accuracy ' + accuracy()); }
   }, 30);
 };
 document.getElementById('stepBtn').onclick = ()=>trainStep();
 document.getElementById('resetBtn').onclick = ()=>randomData();
-document.getElementById('clearBtn').onclick = ()=>{ stopTrain(); pts=[]; w1=0;w2=0;b=0;epoch=0; update(); };
+document.getElementById('clearBtn').onclick = ()=>{ stopTrain(); pts=[]; w1=0;w2=0;b=0;epoch=0; update(); announce('ล้างข้อมูลแล้ว'); };
 
 // --- Parameter Tuning sliders ---
 document.getElementById('tuneLr').oninput = e=>{

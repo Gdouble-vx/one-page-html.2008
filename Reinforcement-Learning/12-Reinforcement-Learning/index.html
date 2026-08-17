@@ -6,6 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Reinforcement Learning (Q-Learning) — RL</title>
 <style>
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#052e16,#16a34a);padding:56px 24px;text-align:center}
@@ -55,6 +56,7 @@
 </style>
 </head>
 <body>
+<div id="sr" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <header>
   <div class="badge">REINFORCEMENT LEARNING · AGENT · REWARD</div>
   <h1>Reinforcement Learning — Q-Learning</h1>
@@ -189,6 +191,7 @@
 
 <script>
 const cv=document.getElementById('demo'), ctx=cv.getContext('2d');
+function announce(m){ const el=document.getElementById('sr'); if(el) el.textContent=m; }
 const GRID=8, CELL=60, OFF=20;
 const START={r:0,c:0}, GOAL={r:7,c:7};
 const WALLS=[[3,2],[3,3],[3,4],[3,5],[5,5],[5,6],[5,7],[2,6],[6,2],[6,3]]; // [r,c]
@@ -327,12 +330,13 @@ function runFast(){
 document.getElementById('playBtn').onclick=()=>{
   if(playing){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เรียนรู้เร็ว (100 episodes/วินาที)'; return; }
   playing=true; slow=false;
+  announce('เริ่มเรียนรู้เร็ว — 100 episodes ต่อวินาที');
   document.getElementById('playBtn').textContent='⏸ หยุด';
   document.getElementById('slowBtn').textContent='🐢 เรียนช้า (ดูเอเจนต์เดิน)';
   timer=setInterval(()=>{
     if(!playing){ clearInterval(timer); return; }
     runFast();
-    if(eps<=epsMin+0.001 && recent.length===100){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เรียนรู้เร็ว (100 episodes/วินาที)'; }
+    if(eps<=epsMin+0.001 && recent.length===100){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เรียนรู้เร็ว (100 episodes/วินาที)'; announce('เรียนรู้ครบแล้ว — ε ลดถึงขั้นต่ำ, episodes ' + episode); }
   },30);
 };
 document.getElementById('slowBtn').onclick=()=>{
@@ -360,7 +364,7 @@ document.getElementById('epBtn').onclick=()=>{
   }
   draw();
 };
-document.getElementById('resetBtn').onclick=()=>{ initQ(); draw(); };
+document.getElementById('resetBtn').onclick=()=>{ initQ(); draw(); announce('รีเซ็ต Q-table แล้ว'); };
 
 // --- Parameter Tuning sliders ---
 const tuneSet = (id, valId, fn)=>{

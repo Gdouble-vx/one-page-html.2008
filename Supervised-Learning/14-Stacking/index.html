@@ -6,6 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Stacking Ensemble — Supervised Learning</title>
 <style>
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#0c4a6e,#0ea5e9);padding:56px 24px;text-align:center}
@@ -53,6 +54,7 @@
 </style>
 </head>
 <body>
+<div id="sr" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <header>
   <div class="badge">SUPERVISED LEARNING · ENSEMBLE · META-LEARNING</div>
   <h1>Stacking (Stacked Generalization)</h1>
@@ -169,6 +171,7 @@ const cvs = {
   m2: document.getElementById('m2'), stack: document.getElementById('stack')
 };
 const cxs = Object.fromEntries(Object.entries(cvs).map(([k,v])=>[k,v.getContext('2d')]));
+function announce(m){ const el=document.getElementById('sr'); if(el) el.textContent=m; }
 const W=250,Hh=240;
 
 let pts=[];
@@ -296,8 +299,8 @@ function drawAll(){
   document.getElementById('wmeta').textContent = trained ? `[${metaW.map(w=>w.toFixed(2)).join(', ')}]` : '—';
 }
 
-document.getElementById('trainBtn').onclick=()=>{ trainMeta(); drawAll(); };
-document.getElementById('resetBtn').onclick=()=>randomData();
+document.getElementById('trainBtn').onclick=()=>{ trainMeta(); drawAll(); announce('ฝึก Stacking เสร็จ — Acc ' + document.getElementById('as').textContent + ', น้ำหนัก meta [' + metaW.map(w=>w.toFixed(2)).join(', ') + ']'); };
+document.getElementById('resetBtn').onclick=()=>{ randomData(); announce('สุ่มข้อมูลใหม่'); };
 
 randomData();
 </script>

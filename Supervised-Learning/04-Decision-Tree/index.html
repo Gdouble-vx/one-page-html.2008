@@ -6,6 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Decision Tree — Supervised Learning</title>
 <style>
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#1e1b4b,#4f46e5);padding:56px 24px;text-align:center}
@@ -58,6 +59,7 @@
 </style>
 </head>
 <body>
+<div id="sr" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <header>
   <div class="badge">SUPERVISED LEARNING · CLASSIFICATION</div>
   <h1>Decision Tree</h1>
@@ -176,6 +178,7 @@
 
 <script>
 const cv = document.getElementById('demo');
+function announce(m){ const el=document.getElementById('sr'); if(el) el.textContent=m; }
 const ctx = cv.getContext('2d');
 const W = cv.width, H = cv.height;
 const PAD = 30;
@@ -353,8 +356,9 @@ document.getElementById('growBtn').onclick = ()=>{
   const d = maxDepth(root);
   grow(root, d+1);
   draw();
+  announce('เพิ่มความลึกเป็น ' + (d+1) + ' ชั้น — Accuracy ' + document.getElementById('acc').textContent);
 };
-document.getElementById('resetBtn').onclick = ()=>{ randomData(); };
+document.getElementById('resetBtn').onclick = ()=>{ randomData(); announce('สุ่มข้อมูลใหม่และรีเซ็ตต้นไม้'); };
 
 // --- Parameter Tuning: max_depth slider ---
 document.getElementById('tuneDepth').oninput = e=>{
