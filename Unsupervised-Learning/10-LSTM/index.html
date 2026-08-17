@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSTM (Long Short-Term Memory) — Deep Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#701a75,#d946ef);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #e879f9;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  .cellbox{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:14px;overflow-x:auto}
+  svg{display:block;margin:0 auto;min-width:760px}
+  .controls{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;align-items:center;background:#1e293b;padding:14px 18px;border-radius:12px}
+  .controls label{font-size:13px;display:flex;flex-direction:column;gap:4px}
+  .controls b{color:#f0abfc}
+  input[type=range]{width:150px;accent-color:#d946ef}
+  button{background:#d946ef;color:#3b0764;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700}
+  button:hover{background:#c026d3}
+  button.secondary{background:#334155;color:#e2e8f0}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:8px 14px;border-radius:8px;font-size:13px}
+  .stat b{color:#f0abfc}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#f5d0fe;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">DEEP LEARNING · SEQUENCE / TIME-SERIES</div>
+  <h1>LSTM — Long Short-Term Memory</h1>
+  <p class="sub">โครงข่ายความจำระยะยาว-สั้น — หน่วยความจำพิเศษ (cell state) ที่ไหลผ่านทุก timestep พร้อม "ประตู" 3 บานคอยควบคุมว่าจะจำ ลืม หรือส่งออกข้อมูลอะไร</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">ปรับค่า <b>x</b> (input), <b>h_prev</b>, <b>c_prev</b> แล้วดูประตูทั้ง 3 (forget, input, output) คำนวณค่าออกมา — หรือกด "เล่นลำดับ" เพื่อดู LSTM จำ-ลืมค่าไปทีละขั้น</p>
+    <div class="cellbox">
+      <svg id="cell" viewBox="0 0 820 300" width="820" height="300"></svg>
+    </div>
+    <div class="controls">
+      <label>x (ข้อมูลใหม่)<input type="range" id="xIn" min="0" max="1" step="0.01" value="0.6"><b id="xVal">0.60</b></label>
+      <label>h_prev (ความจำสั้น)<input type="range" id="hIn" min="0" max="1" step="0.01" value="0.3"><b id="hVal">0.30</b></label>
+      <label>c_prev (ความจำยาว)<input type="range" id="cIn" min="0" max="1" step="0.01" value="0.8"><b id="cVal">0.80</b></label>
+      <button id="stepBtn">⚡ คำนวณ 1 ขั้น</button>
+      <button id="playBtn">▶ เล่นลำดับข้อมูล</button>
+      <button id="resetSeqBtn" class="secondary">🔄 รีเซ็ตสถานะ</button>
+    </div>
+    <div class="stats">
+      <div class="stat">Forget gate f = <b id="fOut">—</b></div>
+      <div class="stat">Input gate i = <b id="iOut">—</b></div>
+      <div class="stat">Output gate o = <b id="oOut">—</b></div>
+      <div class="stat">c_new = <b id="cNew">—</b></div>
+      <div class="stat">h_new = <b id="hNew">—</b></div>
+      <div class="stat">timestep: <b id="ts">0</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">f = σ(Wf·[hₜ₋₁,xₜ]+bf)&nbsp;&nbsp;i = σ(Wi·…)&nbsp;&nbsp;c̃ = tanh(Wc·…)&nbsp;&nbsp;cₜ = f·cₜ₋₁ + i·c̃&nbsp;&nbsp;o = σ(Wo·…)&nbsp;&nbsp;hₜ = o·tanh(cₜ)</div>
+    <ol>
+      <li><b>Forget gate (f):</b> ตัดสินใจว่า "ความจำเดิม" ส่วนไหนควรลืม (ค่า 0 = ลืม, 1 = จำไว้)</li>
+      <li><b>Input gate (i) + candidate (c̃):</b> ตัดสินใจว่าข้อมูลใหม่ <b>x</b> ส่วนไหนควรจำ และสร้างค่าผู้สมัครเข้าระบบความจำ</li>
+      <li><b>อัปเดต cell state (c):</b> cₜ = (ความจำเดิมที่ยังเหลือ) + (ข้อมูลใหม่ที่รับเข้ามา)</li>
+      <li><b>Output gate (o):</b> ปล่อยความจำส่วนไหนออกมาเป็น output (hidden state hₜ)</li>
+      <li>ในขณะที่ RNN ทั่วไปมีปัญหา gradient หาย (ลืมอะไรไกล ๆ เร็ว) LSTM ใช้ประตูเหล่านี้ให้ข้อมูลไหลได้ยาวเป็นร้อย ๆ timestep</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>จำข้อมูลระยะยาวได้ดี (ชื่อของมันเลย!)</li>
+        <li>แก้ปัญหา vanishing gradient ของ RNN ทั่วไป</li>
+        <li>เหมาะกับข้อมูลลำดับ: ข้อความ เสียง ราคาหุ้น</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ฝึกช้า — ต้องประมวลผลทีละ timestep (ไม่ขนาน)</li>
+        <li>พารามิเตอร์เยอะ ใช้หน่วยความจำสูง</li>
+        <li>Transformer แซงหน้าในงานภาษาแล้ว (แต่ LSTM ยังใช้ในบางงาน)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>แปลภาษาและ Speech-to-text (ยุคก่อน Transformer)</li>
+      <li>พยากรณ์อนุกรมเวลา: ราคาหุ้น ยอดขาย สภาพอากาศ</li>
+      <li>สร้างข้อความ / คำทำนายคำถัดไป (text generation)</li>
+      <li>วิดีโอ: จำแนกท่าทางและกิจกรรมในวิดีโอ</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · LSTM</footer>
+
+<script>
+// simple fixed-weight LSTM for demo
+const sig=s=>1/(1+Math.exp(-s));
+let x=0.6, h=0.3, c=0.8, t=0;
+let playing=false, timer=null;
+
+// small learned-ish weights
+const W = {
+  fx:1.5, fh:1.0, fb:-0.8,
+  ix:1.5, ih:1.0, ib:-1.2,
+  cx:1.2, ch:1.0, cb:0.0,
+  ox:1.2, oh:1.0, ob:-0.6
+};
+
+function step(xIn){
+  const f = sig(W.fx*xIn + W.fh*h + W.fb);
+  const i = sig(W.ix*xIn + W.ih*h + W.ib);
+  const ct = Math.tanh(W.cx*xIn + W.ch*h + W.cb);
+  const o = sig(W.ox*xIn + W.oh*h + W.ob);
+  c = f*c + i*ct;
+  h = o*Math.tanh(c);
+  t++;
+  update();
+  return {f,i,o,ct};
+}
+
+const cellSvg = document.getElementById('cell');
+
+function update(){
+  const f = sig(W.fx*x + W.fh*h + W.fb);
+  const i = sig(W.ix*x + W.ih*h + W.ib);
+  const ct = Math.tanh(W.cx*x + W.ch*h + W.cb);
+  const o = sig(W.ox*x + W.oh*h + W.ob);
+  const cNew = f*c + i*ct;
+  const hNew = o*Math.tanh(cNew);
+
+  // snapshot for display (without mutating stored state)
+  const f_ = sig(W.fx*x + W.fh*h + W.fb);
+  const i_ = sig(W.ix*x + W.ih*h + W.ib);
+  const ct_ = Math.tanh(W.cx*x + W.ch*h + W.cb);
+  const o_ = sig(W.ox*x + W.oh*h + W.ob);
+
+  document.getElementById('fOut').textContent = f_.toFixed(3);
+  document.getElementById('iOut').textContent = i_.toFixed(3);
+  document.getElementById('oOut').textContent = o_.toFixed(3);
+  document.getElementById('cNew').textContent = cNew.toFixed(3);
+  document.getElementById('hNew').textContent = hNew.toFixed(3);
+  document.getElementById('ts').textContent = t;
+  document.getElementById('xVal').textContent = x.toFixed(2);
+  document.getElementById('hVal').textContent = h.toFixed(2);
+  document.getElementById('cVal').textContent = c.toFixed(2);
+
+  drawCell(x, h, c, f_, i_, ct_, o_, cNew, hNew);
+}
+
+function drawCell(x, h, c, f, i, ct, o, cNew, hNew){
+  const v = (val,label,color,x0,y0)=>{
+    return `<g><rect x="${x0}" y="${y0}" width="110" height="46" rx="8" fill="#1e293b" stroke="${color}" stroke-width="2"/>
+      <text x="${x0+55}" y="${y0+20}" fill="#94a3b8" font-size="12" text-anchor="middle">${label}</text>
+      <text x="${x0+55}" y="${y0+38}" fill="${color}" font-size="16" font-weight="bold" text-anchor="middle">${val.toFixed(2)}</text></g>`;
+  };
+  let s = '';
+  // main cell body
+  s += `<rect x="330" y="70" width="190" height="170" rx="14" fill="#111c33" stroke="#d946ef" stroke-width="2.5"/>`;
+  s += `<text x="425" y="96" fill="#f0abfc" font-size="14" font-weight="bold" text-anchor="middle">LSTM CELL</text>`;
+  // cell state highway
+  s += `<path d="M90 115 H330 M520 115 H740" stroke="#f0abfc" stroke-width="4" marker-end="url(#arr)"/>`;
+  s += `<text x="70" y="100" fill="#94a3b8" font-size="12" text-anchor="end">cₜ₋₁</text>`;
+  s += `<text x="735" y="100" fill="#94a3b8" font-size="13">cₜ</text>`;
+  // x input
+  s += `<path d="M340 300 V240" stroke="#64748b" stroke-width="2"/>`;
+  s += `<text x="355" y="290" fill="#94a3b8" font-size="12">xₜ</text>`;
+  // h input
+  s += `<path d="M150 300 V220" stroke="#64748b" stroke-width="2"/>`;
+  // gates (f,i,ct,o) inside
+  s += v(f,'Forget (f)','#fb7185', 350, 130);
+  s += v(i,'Input (i)','#4ade80', 350, 185);
+  s += v(ct,'Candidate (c̃)','#fbbf24', 500, 130);
+  s += v(o,'Output (o)','#60a5fa', 500, 185);
+  // h output
+  s += `<path d="M425 300 V265" stroke="#64748b" stroke-width="2"/>`;
+  s += `<text x="330" y="290" fill="#94a3b8" font-size="12">hₜ₋₁</text>`;
+  // combine boxes
+  s += `<rect x="330" y="40" width="190" height="24" rx="6" fill="#701a75" opacity=".9"/>`;
+  s += `<text x="425" y="57" fill="#fff" font-size="12" text-anchor="middle">cₜ = f·cₜ₋₁ + i·c̃&nbsp;&nbsp;→&nbsp;&nbsp;${cNew.toFixed(2)}</text>`;
+  s += `<rect x="330" y="246" width="190" height="24" rx="6" fill="#be185d"/>`;
+  s += `<text x="425" y="263" fill="#fff" font-size="12" text-anchor="middle">hₜ = o·tanh(cₜ)&nbsp;&nbsp;→&nbsp;&nbsp;${hNew.toFixed(2)}</text>`;
+  // info lines
+  s += `<text x="120" y="160" fill="#94a3b8" font-size="12">xₜ = ${x.toFixed(2)}</text>`;
+  s += `<text x="120" y="180" fill="#94a3b8" font-size="12">hₜ₋₁ = ${h.toFixed(2)}</text>`;
+  s += `<text x="120" y="200" fill="#94a3b8" font-size="12">cₜ₋₁ = ${c.toFixed(2)}</text>`;
+  s += `<text x="700" y="180" fill="#94a3b8" font-size="12">cₜ = ${cNew.toFixed(2)}</text>`;
+  s += `<text x="700" y="200" fill="#94a3b8" font-size="12">hₜ = ${hNew.toFixed(2)}</text>`;
+  s += `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f0abfc"/></marker></defs>`;
+  cellSvg.innerHTML = s;
+}
+
+document.getElementById('xIn').oninput=e=>{ x=+e.target.value; update(); };
+document.getElementById('hIn').oninput=e=>{ h=+e.target.value; update(); };
+document.getElementById('cIn').oninput=e=>{ c=+e.target.value; update(); };
+document.getElementById('stepBtn').onclick=()=>step(x);
+document.getElementById('resetSeqBtn').onclick=()=>{ h=0.3; c=0.8; t=0; update(); };
+document.getElementById('playBtn').onclick=()=>{
+  if(playing){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เล่นลำดับข้อมูล'; return; }
+  playing=true;
+  document.getElementById('playBtn').textContent='⏸ หยุด';
+  const seq=[0.9,0.95,0.1,0.05,0.8,0.85,0.15,0.2,0.7,0.9];
+  let si=0;
+  timer=setInterval(()=>{
+    if(!playing){ clearInterval(timer); return; }
+    step(seq[si%seq.length]);
+    document.getElementById('xIn').value=seq[si%seq.length];
+    si++;
+  },500);
+};
+
+update();
+</script>
+</body>
+</html>

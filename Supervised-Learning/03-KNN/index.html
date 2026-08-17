@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>k-Nearest Neighbors (kNN) — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#14532d,#16a34a);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #22c55e;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block;touch-action:none;cursor:crosshair}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#16a34a;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#15803d}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#4ade80}
+  input[type=range]{width:180px;accent-color:#22c55e}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#86efac;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · CLASSIFICATION</div>
+  <h1>k-Nearest Neighbors (kNN)</h1>
+  <p class="sub">เพื่อนบ้านใกล้ที่สุด k ตัว — "บอกฉันว่าเพื่อนบ้านของเธอเป็นใคร แล้วฉันจะบอกว่าเธอเป็นใคร"</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">คลิกบนกราฟเพื่อวางจุดทดสอบ (ดาวสีขาว) kNN จะหาเพื่อนบ้านที่ใกล้ที่สุด k ตัว แล้วโหวตว่าเป็น class ไหน</p>
+    <canvas id="demo" width="880" height="440"></canvas>
+    <div class="controls">
+      <label style="font-size:14px">k = <b id="kVal">5</b>
+        <input type="range" id="kSlider" min="1" max="20" value="5">
+      </label>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่</button>
+    </div>
+    <div class="stats">
+      <div class="stat">ผลทำนาย: <b id="pred" style="color:#fff">—</b></div>
+      <div class="stat">คะแนนโหวต: <b id="votes">—</b></div>
+      <div class="stat">ระยะถึงเพื่อนบ้านไกลสุด: <b id="dist">—</b></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:#fb923c"></span>Class A (สีส้ม)</span>
+      <span><span class="dot" style="background:#60a5fa"></span>Class B (สีน้ำเงิน)</span>
+      <span><span class="dot" style="background:#a78bfa"></span>Class C (สีม่วง)</span>
+      <span><span class="dot" style="background:#fff;border:2px solid #000"></span>จุดทดสอบ</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">d(p, q) = √[(x₁−x₂)² + (y₁−y₂)²]&nbsp;&nbsp;&nbsp;(Euclidean distance)</div>
+    <ol>
+      <li>เก็บข้อมูลฝึกทั้งหมดไว้ในหน่วยความจำ (ไม่มีการ "เรียนรู้" จริง ๆ ระหว่างฝึก!)</li>
+      <li>เมื่อมีข้อมูลใหม่เข้ามา คำนวณระยะทางจากจุดใหม่ไปยังทุกจุดในข้อมูลฝึก</li>
+      <li>เลือกจุดที่ใกล้ที่สุด <b>k</b> จุด</li>
+      <li>ให้เพื่อนบ้าน <b>โหวต</b> — class ที่มีเสียงข้างมากมากที่สุดคือคำตอบ</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">ค่า <b>k</b> มีผลมาก: k เล็ก → ไวต่อ noise (overfit), k ใหญ่ → เรียบเกินไป (underfit) ลองเลื่อน slider แล้วสังเกตผลครับ</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>ง่ายสุด ๆ ไม่มีสมมติฐานเรื่องรูปร่างข้อมูล</li>
+        <li>ได้ผลดีกับข้อมูลขนาดเล็กและมี label ครบ</li>
+        <li>ใช้ได้ทั้ง classification และ regression</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ช้าเมื่อข้อมูลใหญ่ (ต้องคำนวณระยะกับทุกจุด)</li>
+        <li>ไวต่อขนาดของ feature — ต้อง normalize เสมอ</li>
+        <li>ปัญหาความหนาแน่นสูง (curse of dimensionality) เมื่อ feature เยอะ</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>ระบบแนะนำสินค้า: หา user ที่คล้ายกันแล้วแนะนำสิ่งที่พวกเขาชอบ</li>
+      <li>จดจำลายมือ (เช่น ตัวเลข MNIST) ในยุคแรก ๆ</li>
+      <li>ตรวจจับความผิดปกติ (outlier detection)</li>
+      <li>การพยากรณ์ราคาอสังหาฯ จากบ้านที่คล้ายกันในละแวก</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · k-Nearest Neighbors</footer>
+
+<script>
+const cv = document.getElementById('demo');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const PAD = 50;
+const COLORS = ['#fb923c','#60a5fa','#a78bfa'];
+const NAMES = ['Class A','Class B','Class C'];
+
+let pts = [];
+let query = null;
+let k = 5;
+
+function randomData(n=36){
+  pts = [];
+  const centers = [
+    {x:W*0.25, y:H*0.35},
+    {x:W*0.55, y:H*0.62},
+    {x:W*0.75, y:H*0.3}
+  ];
+  for(let i=0;i<n;i++){
+    const c = Math.floor(Math.random()*3);
+    pts.push({x:centers[c].x+(Math.random()*160-80), y:centers[c].y+(Math.random()*160-80), c});
+  }
+  query = null;
+  draw();
+}
+
+function dist(a, b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath(); ctx.moveTo(i,PAD); ctx.lineTo(i,H-PAD); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD,i); ctx.lineTo(W-PAD,i); ctx.stroke();
+  }
+  for(const p of pts){
+    ctx.beginPath(); ctx.arc(p.x, p.y, 6.5, 0, Math.PI*2);
+    ctx.fillStyle = COLORS[p.c]; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  if(!query) return;
+  const sorted = pts.map(p=>({p, d:dist(p, query)})).sort((a,b)=>a.d-b.d);
+  const kn = sorted.slice(0, k);
+  // vote
+  const votes = [0,0,0];
+  for(const {p} of kn) votes[p.c]++;
+  const pred = votes.indexOf(Math.max(...votes));
+
+  // circle around query
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.arc(query.x, query.y, kn[k-1].d, 0, Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // lines to neighbors
+  for(const {p} of kn){
+    ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(query.x, query.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, Math.PI*2);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  }
+  // query star
+  ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const r = i%2===0 ? 13 : 6;
+    const a = i*Math.PI/5 - Math.PI/2;
+    const x = query.x + Math.cos(a)*r, y = query.y + Math.sin(a)*r;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath(); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.strokeStyle = COLORS[pred]; ctx.lineWidth = 3; ctx.stroke();
+
+  document.getElementById('pred').textContent = NAMES[pred];
+  document.getElementById('votes').textContent = votes.map((v,i)=>`${NAMES[i]}: ${v}`).join(' · ');
+  document.getElementById('dist').textContent = kn[k-1].d.toFixed(1)+' px';
+}
+
+document.getElementById('kSlider').oninput = e=>{
+  k = +e.target.value;
+  document.getElementById('kVal').textContent = k;
+  draw();
+};
+cv.addEventListener('click', e=>{
+  const rect = cv.getBoundingClientRect();
+  query = {x:(e.clientX-rect.left)*(W/rect.width), y:(e.clientY-rect.top)*(H/rect.height)};
+  draw();
+});
+document.getElementById('resetBtn').onclick = ()=>randomData();
+
+randomData();
+</script>
+</body>
+</html>

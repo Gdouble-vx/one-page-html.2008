@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNN (Convolutional Neural Network) — Deep Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#312e81,#6366f1);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #818cf8;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block;cursor:pointer;touch-action:none}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#6366f1;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#4f46e5}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  select{background:#1e293b;color:#e2e8f0;padding:8px;border-radius:8px;border:1px solid #334155}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#a5b4fc}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#c7d2fe;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+  .legend{display:flex;gap:16px;margin-top:8px;font-size:13px}
+  .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">DEEP LEARNING · COMPUTER VISION</div>
+  <h1>CNN — Convolutional Neural Network</h1>
+  <p class="sub">โครงข่ายประสาทเทียมแบบคอนโวลูชัน — ใช้ "เลนส์สแกน" (kernel/filter) เลื่อนทับภาพเพื่อดึงคุณลักษณะ เช่น ขอบ เส้น มุม ทีละชั้น ๆ</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">คลิกที่กริดซ้ายเพื่อวาดลวดลาย (7×7 พิกเซล) แล้วดู <b>kernel</b> เลื่อนสแกนไปเรื่อย ๆ เกิดเป็น <b>feature map</b> ทางขวา — ลองเปลี่ยน kernel แล้วดูผลต่าง</p>
+    <canvas id="demo" width="880" height="430"></canvas>
+    <div class="controls">
+      <label style="font-size:14px">Kernel:
+        <select id="kernelSel">
+          <option value="edge">ขอบ (Edge detect)</option>
+          <option value="sharpen">คมชัด (Sharpen)</option>
+          <option value="blur">เบลอ (Blur)</option>
+          <option value="identity">เหมือนเดิม (Identity)</option>
+          <option value="diag">เส้นทแยง (Diagonal)</option>
+        </select>
+      </label>
+      <button id="playBtn">▶ เลื่อน kernel อัตโนมัติ</button>
+      <button id="resetBtn" class="secondary">🎲 ลวดลายตัวอย่าง</button>
+      <button id="clearBtn" class="secondary">🗑 ล้างภาพ</button>
+      <label style="font-size:14px">ตำแหน่ง kernel: <b id="posVal">0</b>/24
+        <input type="range" id="posSlider" min="0" max="24" value="0" style="width:160px;vertical-align:middle;accent-color:#818cf8">
+      </label>
+    </div>
+    <div class="stats">
+      <div class="stat">ขนาด input: <b>7×7</b></div>
+      <div class="stat">Kernel: <b>3×3</b></div>
+      <div class="stat">Feature map: <b>5×5</b></div>
+      <div class="stat">คำนวณ: <b id="calc">—</b></div>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:#e2e8f0"></span>พิกเซลสว่าง (1)</span>
+      <span><span class="swatch" style="background:#0b1220;border:1px solid #334155"></span>พิกเซลมืด (0)</span>
+      <span><span class="swatch" style="background:rgba(99,102,241,.4);border:1px solid #818cf8"></span>พื้นที่ที่ kernel กำลังมอง</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">out(i,j) = Σ Σ input(i+a, j+b) × kernel(a,b) + bias&nbsp;&nbsp;&nbsp;(แล้วตามด้วย ReLU)</div>
+    <ol>
+      <li><b>Convolution:</b> kernel (เช่น 3×3) เลื่อนทับภาพทีละตำแหน่ง คูณค่าพิกเซลกับน้ำหนักของ kernel แล้วรวมกัน → ได้ค่า 1 จุดใน feature map</li>
+      <li><b>Kernel หลายตัว:</b> แต่ละ kernel จับคุณลักษณะต่างกัน (ขอบแนวนอน แนวตั้ง มุม สี) → ได้หลาย channel</li>
+      <li><b>Activation (ReLU):</b> ตัดค่าลบออกเพื่อเพิ่ม non-linearity</li>
+      <li><b>Pooling:</b> ลดขนาดภาพ (เช่น max pooling 2×2) ให้เหลือเฉพาะค่าที่สำคัญ — ทำให้ทนต่อการเลื่อน/ย่อของวัตถุ</li>
+      <li>สลับ Convolution → Pooling หลายชั้น ยิ่งลึกยิ่งจับคุณลักษณะซับซ้อน (เส้น → รูปทรง → หน้า → วัตถุ) แล้วต่อด้วย Fully Connected ชั้นสุดท้าย</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำระดับมนุษย์ในงานภาพ (จำแนกวัตถุ ตรวจจับใบหน้า)</li>
+        <li>ใช้พารามิเตอร์น้อยกว่า MLP มาก (kernel แชร์กันทั่วภาพ)</li>
+        <li>จับตำแหน่งวัตถุได้แม้ขยับ/หมุนเล็กน้อย (translation invariance)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องใช้ข้อมูลและ GPU เยอะ</li>
+        <li>เป็นกล่องดำ อธิบายยาก (แม้มีเทคนิค visualize)</li>
+        <li>ภาพบิดเบี้ยวหรือมุมมองแปลก ๆ ยังทำพลาดได้</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>จำแนกภาพและตรวจจับวัตถุ (YOLO, ResNet, VGG)</li>
+      <li>รถยนต์ไร้คนขับ: ตรวจจับคนเดินถนน ป้ายจราจร</li>
+      <li>วินิจฉัยภาพทางการแพทย์ (X-ray, MRI)</li>
+      <li>ใบหน้าปลดล็อก ฟิลเตอร์ AR แยกภาพ background (deepfake)</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Convolutional Neural Network</footer>
+
+<script>
+const cv=document.getElementById('demo'), ctx=cv.getContext('2d');
+const G=7, KS=3, OUT=5;
+const CELL=44;
+const ix=50, iy=60;          // input grid origin
+const kx=460, ky=90;         // kernel origin
+const ox=700, oy=110;        // output origin
+
+let grid=Array(G).fill(0).map(()=>Array(G).fill(0));
+let pos=0, playing=false, timer=null;
+
+const KERNELS={
+  edge:[[-1,-1,-1],[-1,8,-1],[-1,-1,-1]],
+  sharpen:[[0,-1,0],[-1,5,-1],[0,-1,0]],
+  blur:[[1,1,1],[1,1,1],[1,1,1]].map(r=>r.map(v=>v/9)),
+  identity:[[0,0,0],[0,1,0],[0,0,0]],
+  diag:[[2,0,-2],[0,0,0],[-2,0,2]]
+};
+
+function samplePattern(){
+  // draw a simple shape: horizontal bar + vertical bar
+  grid=Array(G).fill(0).map(()=>Array(G).fill(0));
+  for(let j=3;j<5;j++) for(let i=1;i<6;i++) grid[j][i]=1;
+  for(let i=3;i<5;i++) for(let j=1;j<6;j++) grid[j][i]=1;
+  pos=0;
+  draw();
+}
+function clearGrid(){ grid=Array(G).fill(0).map(()=>Array(G).fill(0)); pos=0; draw(); }
+
+function kernel(){ return KERNELS[document.getElementById('kernelSel').value]; }
+
+function cellAt(px,py, origin){
+  const col=Math.floor((px-origin)/CELL), row=Math.floor((py-origin)/CELL);
+  return {col,row};
+}
+
+cv.addEventListener('click', e=>{
+  const rect=cv.getBoundingClientRect();
+  const px=(e.clientX-rect.left)*(cv.width/rect.width), py=(e.clientY-rect.top)*(cv.height/rect.height);
+  if(px>=ix&&px<ix+G*CELL&&py>=iy&&py<iy+G*CELL){
+    const {col,row}=cellAt(px,py,ix);
+    grid[row][col]=grid[row][col]?0:1;
+    draw();
+  }
+});
+
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#94a3b8'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('INPUT 7×7', ix+G*CELL/2, 36);
+  ctx.fillText('KERNEL 3×3', kx+CELL*1.5, 66);
+  ctx.fillText('FEATURE MAP 5×5', ox+OUT*CELL/2, 86);
+
+  // input grid
+  const r0=Math.floor(pos/OUT), c0=pos%OUT;
+  for(let r=0;r<G;r++) for(let c=0;c<G;c++){
+    const inRF = r>=r0&&r<r0+KS&&c>=c0&&c<c0+KS;
+    ctx.fillStyle = grid[r][c] ? (inRF?'rgba(129,140,248,.9)':'#cbd5e1') : (inRF?'rgba(99,102,241,.3)':'#0b1220');
+    ctx.fillRect(ix+c*CELL, iy+r*CELL, CELL, CELL);
+    ctx.strokeStyle='#334155'; ctx.strokeRect(ix+c*CELL, iy+r*CELL, CELL, CELL);
+  }
+  // highlight receptive field
+  ctx.strokeStyle='#facc15'; ctx.lineWidth=3;
+  ctx.strokeRect(ix+c0*CELL-2, iy+r0*CELL-2, KS*CELL+4, KS*CELL+4);
+
+  // kernel
+  const K=kernel();
+  let kmin=Infinity,kmax=-Infinity;
+  for(const row of K) for(const v of row){ kmin=Math.min(kmin,v); kmax=Math.max(kmax,v); }
+  for(let r=0;r<KS;r++) for(let c=0;c<KS;c++){
+    const v=K[r][c];
+    const t=(v-kmin)/((kmax-kmin)||1);
+    ctx.fillStyle=`rgba(${Math.round(129+(37-129)*t)},${Math.round(140+(99-140)*t)},${Math.round(248+(102-248)*t)},.85)`;
+    ctx.fillRect(kx+c*CELL, ky+r*CELL, CELL, CELL);
+    ctx.strokeStyle='#1e293b'; ctx.strokeRect(kx+c*CELL, ky+r*CELL, CELL, CELL);
+    ctx.fillStyle=v>=0?'#1e1b4b':'#fff'; ctx.font='bold 12px sans-serif';
+    ctx.fillText(v.toFixed(1), kx+c*CELL+CELL/2, ky+r*CELL+CELL/2+4);
+  }
+
+  // feature map
+  let maxV=1;
+  for(let r=0;r<OUT;r++) for(let c=0;c<OUT;c++){
+    let s=0;
+    for(let a=0;a<KS;a++) for(let bb=0;bb<KS;bb++) s+=grid[r+a][c+bb]*K[a][bb];
+    maxV=Math.max(maxV,Math.abs(s));
+  }
+  let curOut=0;
+  for(let r=0;r<OUT;r++) for(let c=0;c<OUT;c++){
+    let s=0;
+    for(let a=0;a<KS;a++) for(let bb=0;bb<KS;bb++) s+=grid[r+a][c+bb]*K[a][bb];
+    if(r===r0&&c===c0) curOut=s;
+    const t=Math.max(0,s)/maxV;
+    const isCur=r===r0&&c===c0;
+    ctx.fillStyle = isCur ? 'rgba(250,204,21,.95)' : `rgba(${Math.round(99+(56-99)*t)},${Math.round(102+(189-102)*t)},${Math.round(241+(243-241)*t)},${0.25+0.75*t})`;
+    ctx.fillRect(ox+c*CELL, oy+r*CELL, CELL, CELL);
+    ctx.strokeStyle=isCur?'#facc15':'#334155'; ctx.lineWidth=isCur?3:1;
+    ctx.strokeRect(ox+c*CELL, oy+r*CELL, CELL, CELL);
+    ctx.fillStyle='#e2e8f0'; ctx.font='10px sans-serif';
+    ctx.fillText(s.toFixed(0), ox+c*CELL+CELL/2, oy+r*CELL+CELL/2+3);
+  }
+  // connection line
+  ctx.strokeStyle='rgba(250,204,21,.4)'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  ctx.moveTo(ix+c0*CELL+CELL/2, iy+r0*CELL+CELL/2);
+  ctx.lineTo(ox+c0*CELL+CELL/2, oy+r0*CELL+CELL/2);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  document.getElementById('posVal').textContent=pos;
+  document.getElementById('posSlider').value=pos;
+  document.getElementById('calc').textContent=`Σ (${grid[r0][c0]}×${K[0][0].toFixed(2)} + ... ) = ${curOut.toFixed(1)}`;
+}
+
+document.getElementById('posSlider').oninput=e=>{ pos=+e.target.value; draw(); };
+document.getElementById('kernelSel').onchange=()=>draw();
+document.getElementById('resetBtn').onclick=samplePattern;
+document.getElementById('clearBtn').onclick=clearGrid;
+document.getElementById('playBtn').onclick=()=>{
+  if(playing){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เลื่อน kernel อัตโนมัติ'; return; }
+  playing=true;
+  document.getElementById('playBtn').textContent='⏸ หยุด';
+  timer=setInterval(()=>{
+    pos=(pos+1)%(OUT*OUT);
+    draw();
+  },220);
+};
+
+samplePattern();
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stacking Ensemble — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#0c4a6e,#0ea5e9);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
+  main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #38bdf8;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:900px){.four{grid-template-columns:repeat(2,1fr)}}
+  .four .cap{text-align:center;font-size:13px;color:#94a3b8;margin-top:6px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#0ea5e9;color:#0c1b2a;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700}
+  button:hover{background:#0284c7}
+  button.secondary{background:#334155;color:#e2e8f0}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#7dd3fc}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#bae6fd;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · ENSEMBLE · META-LEARNING</div>
+  <h1>Stacking (Stacked Generalization)</h1>
+  <p class="sub">การซ้อนโมเดล — ฝึกโมเดลพื้นฐาน (base models) หลายตัวให้ทำนายก่อน แล้วเอา <b>คำทำนายของทุกตัว</b> ไปเป็น input ให้โมเดลระดับบน (meta-model) เรียนรู้อีกชั้น เพื่อรวมจุดแข็งของแต่ละโมเดล</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">โมเดลพื้นฐาน 3 ตัว (ก, ข, ค) แต่ละตัวผิดคนละที่ — กด "ฝึก Stacking" เพื่อให้ meta-model เรียนรู้ว่าจะเชื่อโมเดลไหนตรงไหน แล้วดูผลรวมที่แม่นกว่า</p>
+    <div class="four">
+      <div><canvas id="m0" width="250" height="240"></canvas><div class="cap">โมเดล ก (แบ่งแนวตั้ง)</div></div>
+      <div><canvas id="m1" width="250" height="240"></canvas><div class="cap">โมเดล ข (แบ่งแนวนอน)</div></div>
+      <div><canvas id="m2" width="250" height="240"></canvas><div class="cap">โมเดล ค (แนวทแยง)</div></div>
+      <div><canvas id="stack" width="250" height="240"></canvas><div class="cap">⭐ ผล Stacking (meta)</div></div>
+    </div>
+    <div class="controls">
+      <button id="trainBtn">🧠 ฝึก Stacking (meta-model)</button>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่</button>
+    </div>
+    <div class="stats">
+      <div class="stat">Acc โมเดล ก: <b id="a0">—</b></div>
+      <div class="stat">Acc โมเดล ข: <b id="a1">—</b></div>
+      <div class="stat">Acc โมเดล ค: <b id="a2">—</b></div>
+      <div class="stat">⭐ Acc Stacking: <b id="as" style="color:#7dd3fc">—</b></div>
+      <div class="stat">น้ำหนัก meta: <b id="wmeta">—</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">ขั้นที่ 1: p₁, p₂, p₃ = base₁(x), base₂(x), base₃(x)&nbsp;&nbsp;·&nbsp;&nbsp;ขั้นที่ 2: ŷ = meta(p₁, p₂, p₃)</div>
+    <ol>
+      <li><b>Level-0 (Base models):</b> ฝึกโมเดลหลายแบบ เช่น Logistic Regression, kNN, Decision Tree บนข้อมูลเดียวกัน</li>
+      <li>ให้แต่ละโมเดลทำนายบนข้อมูลฝึก → สร้างชุดข้อมูลใหม่จากคำทำนายเหล่านี้ (เรียกว่า <b>meta-features</b>)</li>
+      <li><b>Level-1 (Meta-model):</b> ฝึกโมเดลอีกตัว (เช่น Logistic Regression) บน meta-features เพื่อเรียนรู้ว่า "โมเดลไหนเก่งตรงไหน ควรเชื่อใครมากน้อยแค่ไหน"</li>
+      <li>เวลาทำนายข้อมูลใหม่: ให้ base models ทำนายก่อน → ส่งคำทำนายเข้าสู่ meta-model → ได้คำตอบสุดท้าย</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">⚠️ ควรทำ <b>cross-validation</b> ตอนสร้าง meta-features เพื่อไม่ให้ meta-model เรียนรู้ว่า base models "จำข้อมูลฝึกได้" แทนที่จะเก่งจริง</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำสูงกว่าการใช้โมเดลเดียวหรือ voting ทั่วไป</li>
+        <li>ใช้จุดแข็งของโมเดลหลายประเภทพร้อมกัน</li>
+        <li>ชนะการแข่งขัน ML หลายรายการ (เช่น Netflix Prize)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ช้าและใช้ทรัพยากรหลายเท่า (ต้องฝึกหลายโมเดล)</li>
+        <li>เสี่ยงต่อ data leakage ถ้าไม่ทำ cross-validation</li>
+        <li>ซับซ้อน ดีบักและอธิบายยาก</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>ชนะการแข่งขัน Kaggle — รวม XGBoost + LightGBM + Neural Network</li>
+      <li>ระบบแนะนำภาพยนตร์ (Netflix Prize)</li>
+      <li>การตรวจจับการฉ้อโกง: รวมโมเดลความเร็วสูงหลายตัว</li>
+      <li>พยากรณ์สภาพอากาศจากหลายแหล่งข้อมูล</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Stacking Ensemble</footer>
+
+<script>
+const PAD=20;
+const cvs = {
+  m0: document.getElementById('m0'), m1: document.getElementById('m1'),
+  m2: document.getElementById('m2'), stack: document.getElementById('stack')
+};
+const cxs = Object.fromEntries(Object.entries(cvs).map(([k,v])=>[k,v.getContext('2d')]));
+const W=250,Hh=240;
+
+let pts=[];
+// base model params
+const base = [
+  {t:0},   // a: vertical split x <= t
+  {t:0},   // b: horizontal split y <= t
+  {w:0,b:0} // c: diagonal logistic
+];
+let metaW=[0,0,0], metaB=0, trained=false;
+
+function randomData(n=60){
+  pts=[];
+  for(let i=0;i<n;i++){
+    const c=Math.random()<0.5?0:1;
+    // overlapping-ish clusters
+    const x= (c===0?W*0.38:W*0.62) + (Math.random()*90-45);
+    const y= (c===0?Hh*0.38:Hh*0.62) + (Math.random()*90-45);
+    pts.push({x,y,c});
+  }
+  fitBase();
+  metaW=[0,0,0]; metaB=0; trained=false;
+  drawAll();
+}
+
+function fitBase(){
+  // a: threshold on x
+  let best=null;
+  for(const f of ['x','y']){
+    const vals=[...new Set(pts.map(p=>p[f]))].sort((a,b)=>a-b);
+    for(let v=1;v<vals.length;v++){
+      const t=(vals[v-1]+vals[v])/2;
+      let err=0;
+      for(const p of pts) if((p[f]<=t?0:1)!==p.c) err++;
+      if(!best||err<best.err) best={f,t,err};
+    }
+  }
+  base[0].f='x'; base[0].t=best.t;
+  base[1].f='y'; base[1].t=best.t;
+  // c: diagonal logistic via quick gradient descent
+  let w=0,b=0;
+  for(let e=0;e<300;e++){
+    let gw=0,gb=0;
+    for(const p of pts){
+      const nx=(p.x-W/2)/90, ny=(p.y-Hh/2)/90;
+      const z=nx+ny; // diagonal feature
+      const prob=1/(1+Math.exp(-(w*z+b)));
+      const err=prob-p.c;
+      gw+=err*z; gb+=err;
+    }
+    w-=0.1*gw/pts.length; b-=0.1*gb/pts.length;
+  }
+  base[2].w=w; base[2].b=b;
+}
+
+function basePred(i, p){
+  if(i===0) return (p.x<=base[0].t?0:1);
+  if(i===1) return (p.y<=base[1].t?0:1);
+  const z=(p.x-W/2)/90+(p.y-Hh/2)/90;
+  return 1/(1+Math.exp(-(base[2].w*z+base[2].b)))>=0.5?1:0;
+}
+function metaProb(p){
+  const feats=[basePred(0,p),basePred(1,p),basePred(2,p)];
+  const z=metaW[0]*feats[0]+metaW[1]*feats[1]+metaW[2]*feats[2]+metaB;
+  return 1/(1+Math.exp(-z));
+}
+function trainMeta(epochs=1500, lr=0.5){
+  for(let e=0;e<epochs;e++){
+    let g=[0,0,0],gb=0;
+    for(const p of pts){
+      const feats=[basePred(0,p),basePred(1,p),basePred(2,p)];
+      const z=metaW[0]*feats[0]+metaW[1]*feats[1]+metaW[2]*feats[2]+metaB;
+      const err=(1/(1+Math.exp(-z)))-p.c;
+      for(let j=0;j<3;j++) g[j]+=err*feats[j];
+      gb+=err;
+    }
+    for(let j=0;j<3;j++) metaW[j]-=lr*g[j]/pts.length;
+    metaB-=lr*gb/pts.length;
+  }
+  trained=true;
+}
+
+function drawOne(key, predFn){
+  const cx=cxs[key];
+  cx.clearRect(0,0,W,Hh);
+  cx.fillStyle='#0b1220'; cx.fillRect(0,0,W,Hh);
+  const step=5;
+  for(let y=PAD;y<Hh-PAD;y+=step){
+    for(let x=PAD;x<W-PAD;x+=step){
+      cx.fillStyle = predFn({x,y})===0 ? 'rgba(96,165,250,.18)' : 'rgba(251,146,60,.18)';
+      cx.fillRect(x,y,step,step);
+    }
+  }
+  for(const p of pts){
+    cx.beginPath(); cx.arc(p.x,p.y,3.5,0,Math.PI*2);
+    cx.fillStyle=p.c===0?'#60a5fa':'#fb923c';
+    cx.fill();
+  }
+}
+
+function acc(predFn){
+  let ok=0;
+  for(const p of pts) if(predFn(p)===p.c) ok++;
+  return (ok/pts.length*100).toFixed(1)+'%';
+}
+
+function drawAll(){
+  drawOne('m0', p=>basePred(0,p));
+  drawOne('m1', p=>basePred(1,p));
+  drawOne('m2', p=>basePred(2,p));
+  drawOne('stack', p=> trained ? (metaProb(p)>=0.5?1:0) : (basePred(0,p)===basePred(1,p)?basePred(0,p):basePred(2,p)));
+  document.getElementById('a0').textContent=acc(p=>basePred(0,p));
+  document.getElementById('a1').textContent=acc(p=>basePred(1,p));
+  document.getElementById('a2').textContent=acc(p=>basePred(2,p));
+  document.getElementById('as').textContent = trained ? acc(p=>metaProb(p)>=0.5?1:0) : '—';
+  document.getElementById('wmeta').textContent = trained ? `[${metaW.map(w=>w.toFixed(2)).join(', ')}]` : '—';
+}
+
+document.getElementById('trainBtn').onclick=()=>{ trainMeta(); drawAll(); };
+document.getElementById('resetBtn').onclick=()=>randomData();
+
+randomData();
+</script>
+</body>
+</html>

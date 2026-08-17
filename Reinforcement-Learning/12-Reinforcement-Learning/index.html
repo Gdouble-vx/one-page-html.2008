@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reinforcement Learning (Q-Learning) — RL</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#052e16,#16a34a);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #4ade80;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#16a34a;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#15803d}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#4ade80}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#86efac;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">REINFORCEMENT LEARNING · AGENT · REWARD</div>
+  <h1>Reinforcement Learning — Q-Learning</h1>
+  <p class="sub">การเรียนรู้แบบเสริมแรง — เอเจนต์ (agent) เรียนรู้จากการลองผิดลองถูกในสิ่งแวดล้อม รับ <b>รางวัล (reward)</b> เมื่อทำดี และถูก <b>ลงโทษ</b> เมื่อทำผิด โดยไม่ต้องมีคำตอบสำเร็จรูป</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">เอเจนต์ต้องเดินจากมุมซ้ายบนไปให้ถึงดาว ⭐ โดยหลบกำแพง — เริ่มต้นเดินมั่ว ๆ (สีส้ม) แล้วค่อย ๆ ฉลาดขึ้น (สีเขียว) ดูค่า Q-value เปลี่ยนไป</p>
+    <canvas id="demo" width="720" height="520"></canvas>
+    <div class="controls">
+      <button id="playBtn">▶ เรียนรู้เร็ว (100 episodes/วินาที)</button>
+      <button id="stepBtn" class="secondary">👣 เดิน 1 ก้าว</button>
+      <button id="epBtn" class="secondary">📚 เรียน 1 episode</button>
+      <button id="resetBtn" class="secondary">🔄 รีเซ็ต Q-table</button>
+      <button id="slowBtn">🐢 เรียนช้า (ดูเอเจนต์เดิน)</button>
+    </div>
+    <div class="stats">
+      <div class="stat">Episode: <b id="ep">0</b></div>
+      <div class="stat">ก้าวใน episode นี้: <b id="steps">0</b></div>
+      <div class="stat">รางวัลสะสม: <b id="reward">0.00</b></div>
+      <div class="stat">Exploration (ε): <b id="eps">1.000</b></div>
+      <div class="stat">รางวัลเฉลี่ย 100 ep ล่าสุด: <b id="avg">—</b></div>
+    </div>
+    <div class="legend">
+      <span>🟢 ความร้อนของสี = ค่า Q สูง (ดี)</span>
+      <span>⬆️ ลูกศร = ทิศทางที่ดีที่สุด (policy)</span>
+      <span>🧱 กำแพง</span>
+      <span>⭐ เป้าหมาย (+10)</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Q(s,a) ← Q(s,a) + α [ r + γ·max Q(s′,a′) − Q(s,a) ]&nbsp;&nbsp;&nbsp;(Bellman equation)</div>
+    <ol>
+      <li><b>State (s) & Action (a):</b> ตำแหน่งของเอเจนต์ และการเคลื่อนที่ 4 ทิศทาง</li>
+      <li><b>Reward (r):</b> ถึงเป้าหมาย = <b>+10</b>, ชนกำแพง = <b>−1</b>, เดินปกติ = <b>−0.04</b> (กดดันให้ถึงเป้าไว)</li>
+      <li><b>Q-table:</b> ตารางเก็บ "ความคุ้มค่า" ของการทำ action แต่ละอย่างในแต่ละ state — เริ่มต้นเป็น 0 (ไม่รู้อะไร)</li>
+      <li><b>Exploration vs Exploitation:</b> ช่วงแรกสุ่มเดินเยอะ (ε สูง) เพื่อสำรวจ พอเรียนรู้ไป ε ลดลง หันมาเลือก action ที่ Q สูงสุด</li>
+      <li>ทุกก้าว อัปเดต Q ด้วย Bellman equation — ค่าดี ๆ แผ่ย้อนกลับไปยัง state ก่อนหน้าเรื่อย ๆ จนเอเจนต์รู้ทางลัดที่สั้นที่สุด</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>เรียนรู้ได้โดยไม่ต้องมีข้อมูล label — แค่รางวัล</li>
+        <li>เก่งกว่ามนุษย์ในเกมบางเกม (Go, Chess, Dota 2)</li>
+        <li>ใช้ได้กับระบบที่ต้องตัดสินใจต่อเนื่อง</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องลองผิดลองถูกมาก — ข้อมูล/เวลา/พลังงานมหาศาล</li>
+        <li>ออกแบบ reward function ยาก (reward hacking)</li>
+        <li>ไม่เสถียร — ใช้ในโลกจริง (เช่น หุ่นยนต์) เสี่ยงอันตราย</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>AlphaGo / AlphaZero: เอาชนะแชมป์หมากล้อมและหมากรุก</li>
+      <li>หุ่นยนต์เดิน/จับวัตถุ (robotics)</li>
+      <li>ควบคุมรถยนต์ไร้คนขับและระบบจราจร</li>
+      <li>RLHF — วิธีปรับ ChatGPT ให้ตอบตามที่มนุษย์ต้องการ</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Reinforcement Learning</footer>
+
+<script>
+const cv=document.getElementById('demo'), ctx=cv.getContext('2d');
+const GRID=8, CELL=60, OFF=20;
+const START={r:0,c:0}, GOAL={r:7,c:7};
+const WALLS=[[3,2],[3,3],[3,4],[3,5],[5,5],[5,6],[5,7],[2,6],[6,2],[6,3]]; // [r,c]
+const ACTIONS=['↑','→','↓','←'];
+const DR=[-1,0,1,0], DC=[0,1,0,-1];
+
+let Q=[], agent={r:0,c:0}, episode=0, steps=0, totalReward=0;
+let eps=1.0, epsMin=0.05, epsDecay=0.9995;
+let recent=[];
+let playing=false, timer=null, slow=false;
+
+function isWall(r,c){ return WALLS.some(w=>w[0]===r&&w[1]===c); }
+function inGrid(r,c){ return r>=0&&r<GRID&&c>=0&&c<GRID; }
+
+function initQ(){
+  Q=[];
+  for(let r=0;r<GRID;r++){
+    Q.push([]);
+    for(let c=0;c<GRID;c++){
+      Q[r].push(isWall(r,c)?null:[0,0,0,0]);
+    }
+  }
+  agent={...START}; steps=0; totalReward=0; episode=0; eps=1.0; recent=[];
+}
+
+function chooseAction(r,c){
+  const q=Q[r][c];
+  if(Math.random()<eps){ return Math.floor(Math.random()*4); }
+  const mx=Math.max(...q);
+  const best=[]; q.forEach((v,i)=>{ if(v===mx) best.push(i); });
+  return best[Math.floor(Math.random()*best.length)];
+}
+
+function step(){
+  if(agent.r===GOAL.r&&agent.c===GOAL.c){
+    endEpisode();
+    return;
+  }
+  const r=agent.r, c=agent.c;
+  const a=chooseAction(r,c);
+  let nr=r+DR[a], nc=c+DC[a];
+  let reward=-0.04;
+  if(!inGrid(nr,nc)||isWall(nr,nc)){ nr=r; nc=c; reward=-1; }
+  const done = nr===GOAL.r&&nc===GOAL.c;
+  if(done) reward=10;
+  const q=Q[r][c];
+  const maxNext = done ? 0 : Math.max(...Q[nr][nc]);
+  q[a] = q[a] + 0.15*(reward + 0.98*maxNext - q[a]);
+  agent.r=nr; agent.c=nc;
+  steps++; totalReward+=reward;
+  eps=Math.max(epsMin, eps*epsDecay);
+}
+
+function endEpisode(){
+  episode++;
+  recent.push(totalReward);
+  if(recent.length>100) recent.shift();
+  agent={...START}; steps=0; totalReward=0;
+}
+
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,cv.width,cv.height);
+  // Q heatmap
+  let qMax=1;
+  for(let r=0;r<GRID;r++) for(let c=0;c<GRID;c++)
+    if(Q[r][c]) qMax=Math.max(qMax, Math.max(...Q[r][c]));
+  for(let r=0;r<GRID;r++){
+    for(let c=0;c<GRID;c++){
+      const x=OFF+c*CELL, y=OFF+r*CELL;
+      if(isWall(r,c)){
+        ctx.fillStyle='#475569'; ctx.fillRect(x,y,CELL,CELL);
+        ctx.strokeStyle='#0b1220'; ctx.strokeRect(x,y,CELL,CELL);
+        ctx.fillStyle='#94a3b8'; ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('🧱', x+CELL/2, y+CELL/2+2);
+        continue;
+      }
+      const v = Q[r][c] ? Math.max(...Q[r][c]) : 0;
+      const t=Math.max(0,v)/qMax;
+      ctx.fillStyle=`rgba(${Math.round(134+ (22-134)*t)},${Math.round(239+ (163-239)*t)},${Math.round(153+ (37-153)*t)},${0.15+0.55*t})`;
+      ctx.fillRect(x,y,CELL,CELL);
+      ctx.strokeStyle='#1e293b'; ctx.strokeRect(x,y,CELL,CELL);
+      // policy arrow
+      if(Q[r][c]){
+        const mx=Math.max(...Q[r][c]);
+        const best=Q[r][c].indexOf(mx);
+        ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=2.5;
+        ctx.beginPath();
+        const cx2=x+CELL/2, cy2=y+CELL/2;
+        const len=14;
+        ctx.moveTo(cx2, cy2);
+        ctx.lineTo(cx2+DC[best]*len, cy2+DR[best]*len);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx2+DC[best]*len, cy2+DR[best]*len, 3, 0, Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+      }
+      // Q value text
+      if(Q[r][c] && Math.max(...Q[r][c])>0.3){
+        ctx.fillStyle='rgba(0,0,0,.55)'; ctx.font='10px sans-serif';
+        ctx.fillText(Q[r][c][Q[r][c].indexOf(Math.max(...Q[r][c]))].toFixed(1), x+CELL-4, y+CELL-5);
+      }
+    }
+  }
+  // goal
+  const gx=OFF+GOAL.c*CELL, gy=OFF+GOAL.r*CELL;
+  ctx.font='30px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('⭐', gx+CELL/2, gy+CELL/2+2);
+  // agent
+  if(!(agent.r===GOAL.r&&agent.c===GOAL.c)){
+    const ax=OFF+agent.c*CELL+CELL/2, ay=OFF+agent.r*CELL+CELL/2;
+    ctx.beginPath(); ctx.arc(ax,ay,14,0,Math.PI*2);
+    ctx.fillStyle='#facc15'; ctx.fill();
+    ctx.strokeStyle='#0f172a'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle='#1e293b'; ctx.font='10px sans-serif';
+    ctx.fillText('🤖', ax, ay+2);
+  }
+  // stats
+  document.getElementById('ep').textContent=episode;
+  document.getElementById('steps').textContent=steps;
+  document.getElementById('reward').textContent=totalReward.toFixed(2);
+  document.getElementById('eps').textContent=eps.toFixed(3);
+  const avg = recent.length ? (recent.reduce((a,b)=>a+b,0)/recent.length).toFixed(2) : '—';
+  document.getElementById('avg').textContent=avg;
+}
+
+function runFast(){
+  for(let i=0;i<100;i++){
+    if(!(agent.r===GOAL.r&&agent.c===GOAL.c)) step();
+    else endEpisode();
+  }
+  draw();
+}
+
+document.getElementById('playBtn').onclick=()=>{
+  if(playing){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เรียนรู้เร็ว (100 episodes/วินาที)'; return; }
+  playing=true; slow=false;
+  document.getElementById('playBtn').textContent='⏸ หยุด';
+  document.getElementById('slowBtn').textContent='🐢 เรียนช้า (ดูเอเจนต์เดิน)';
+  timer=setInterval(()=>{
+    if(!playing){ clearInterval(timer); return; }
+    runFast();
+    if(eps<=epsMin+0.001 && recent.length===100){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เรียนรู้เร็ว (100 episodes/วินาที)'; }
+  },30);
+};
+document.getElementById('slowBtn').onclick=()=>{
+  if(playing){ playing=false; clearInterval(timer); document.getElementById('playBtn').textContent='▶ เรียนรู้เร็ว (100 episodes/วินาที)'; }
+  slow=!slow;
+  if(slow){
+    document.getElementById('slowBtn').textContent='⏸ หยุดช้า';
+    timer=setInterval(()=>{
+      if(!slow){ clearInterval(timer); return; }
+      if(agent.r===GOAL.r&&agent.c===GOAL.c) endEpisode();
+      else step();
+      draw();
+    },90);
+  } else {
+    document.getElementById('slowBtn').textContent='🐢 เรียนช้า (ดูเอเจนต์เดิน)';
+  }
+};
+document.getElementById('stepBtn').onclick=()=>{
+  if(agent.r===GOAL.r&&agent.c===GOAL.c) endEpisode(); else step();
+  draw();
+};
+document.getElementById('epBtn').onclick=()=>{
+  for(let i=0;i<200;i++){
+    if(agent.r===GOAL.r&&agent.c===GOAL.c) endEpisode(); else step();
+  }
+  draw();
+};
+document.getElementById('resetBtn').onclick=()=>{ initQ(); draw(); };
+
+initQ();
+draw();
+</script>
+</body>
+</html>

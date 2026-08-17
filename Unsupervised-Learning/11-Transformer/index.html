@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transformer — Deep Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#831843,#f43f5e);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #fb7185;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:800px){.two{grid-template-columns:1fr}}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block;cursor:pointer}
+  .archbox{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:10px;overflow-x:auto}
+  svg{display:block;margin:0 auto;min-width:380px}
+  .controls{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#f43f5e;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#e11d48}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#fda4af}
+  input[type=range]{width:170px;accent-color:#fb7185}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fecdd3;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">DEEP LEARNING · NLP · FOUNDATION MODELS</div>
+  <h1>Transformer</h1>
+  <p class="sub">สถาปัตยกรรมที่อยู่เบื้องหลัง GPT, BERT, Gemini — ใช้กลไก <b>Self-Attention</b> ให้ทุกคำมองเห็นและ "ให้ความสนใจ" กันเองทั้งหมดพร้อมกัน (parallel) แทนการอ่านทีละคำ</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">Attention map 5×5 ด้านซ้าย — แถว = คำที่เป็น Query, คอลัมน์ = คำที่เป็น Key สีเข้ม = ให้ความสนใจมาก คลิกแถวเพื่อไฮไลต์ ดูผล weighted sum ด้านล่าง</p>
+    <div class="two">
+      <div>
+        <canvas id="attn" width="480" height="380"></canvas>
+        <div class="stats">
+          <div class="stat">กำลังดู: <b id="qword">—</b></div>
+          <div class="stat">Attention focus: <b id="focus">—</b></div>
+          <div class="stat">Temperature: <b id="tempVal">1.0</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="archbox">
+          <svg id="arch" viewBox="0 0 420 560" width="420" height="560"></svg>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <label style="font-size:13px">Temperature (ความคมของ attention)
+        <input type="range" id="temp" min="0.2" max="3" step="0.1" value="1" style="vertical-align:middle">
+      </label>
+      <button id="shuffleBtn">🎲 ข้อมูลใหม่ (คำใหม่)</button>
+      <span class="hint">💡 อุณหภูมิต่ำ = โฟกัสคำเดียวมาก ๆ, สูง = กระจายความสนใจทั่ว</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Attention(Q,K,V) = softmax(Q·Kᵀ / √dₖ) · V</div>
+    <ol>
+      <li>แปลงทุกคำให้เป็นเวกเตอร์ (embedding) แล้วสร้าง <b>Query (Q)</b>, <b>Key (K)</b>, <b>Value (V)</b> ด้วยการคูณเมทริกซ์น้ำหนัก</li>
+      <li>คำนวณ <b>score</b> = Q·Kᵀ: คำนี้ "ควรสนใจ" คำอื่นมากแค่ไหน (ห้ามมองคำอนาคตด้วย masking ใน decoder)</li>
+      <li>หารด้วย √dₖ แล้วทำ <b>softmax</b> → กลายเป็นน้ำหนักที่รวมกันเป็น 1</li>
+      <li>คูณกับ <b>V</b> แล้วรวมกัน → คำใหม่ที่ "รู้บริบท" ของทั้งประโยค</li>
+      <li><b>Multi-Head Attention</b>: ทำหลายชุดพร้อมกัน (แต่ละหัวจับความสัมพันธ์ต่างแบบ) + Positional Encoding เพื่อให้รู้ตำแหน่งของคำ</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">เพราะทุกคำคำนวณพร้อมกันได้ (ไม่ต้องรอทีละคำ) Transformer จึงฝึกเร็วกว่า RNN/LSTM มาก และ scale ไปเป็นโมเดลภาษาขนาดยักษ์ได้</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>ประมวลผลขนานกันหมด → ฝึกไวมาก ใช้ข้อมูลมหาศาลได้</li>
+        <li>จับความสัมพันธ์ระยะไกลในข้อความได้ดี (ทั้งประโยค)</li>
+        <li>ใช้ได้หลายงาน: ข้อความ ภาพ เสียง วิดีโอ (multi-modal)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>หน่วยความจำ O(n²) — ข้อความยาว ๆ เปลืองทรัพยากร</li>
+        <li>ต้องใช้ข้อมูลและ GPU จำนวนมหาศาล</li>
+        <li>ไม่เข้าใจ "โลกจริง" — หลอน (hallucinate) ได้</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>ChatGPT / Gemini / Claude — โมเดลภาษาขนาดใหญ่ (LLM)</li>
+      <li>แปลภาษา (Google Translate, DeepL)</li>
+      <li>Vision Transformer: จำแนกภาพด้วย attention แทน convolution</li>
+      <li>AlphaFold 2: พยากรณ์โครงสร้างโปรตีน</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Transformer</footer>
+
+<script>
+const cv=document.getElementById('attn'), ctx=cv.getContext('2d');
+const WORDS=['แมว','นอน','บน','โต๊ะ','อาหาร'];
+const D=8;
+let E=null;           // embeddings (5 x D)
+let selRow=0;
+
+function newData(){
+  E=[];
+  for(let i=0;i<5;i++){
+    const v=[];
+    for(let d=0;d<D;d++) v.push((Math.random()*2-1));
+    E.push(v);
+  }
+  selRow=0;
+  draw();
+}
+
+function attention(temp){
+  const S=[];
+  for(let i=0;i<5;i++){
+    const row=[];
+    for(let j=0;j<5;j++){
+      let s=0;
+      for(let d=0;d<D;d++) s+=E[i][d]*E[j][d];
+      row.push(s/Math.sqrt(D));
+    }
+    // softmax
+    const mx=Math.max(...row);
+    const ex=row.map(v=>Math.exp((v-mx)/temp));
+    const sum=ex.reduce((a,b)=>a+b,0);
+    S.push(ex.map(v=>v/sum));
+  }
+  return S;
+}
+
+function draw(){
+  const S=attention(+document.getElementById('temp').value);
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,cv.width,cv.height);
+  const cell=48, x0=130, y0=80;
+  ctx.fillStyle='#94a3b8'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('QUERY ↓', x0+cell*2.5, 40);
+  ctx.fillText('KEY →', 40, y0-10);
+  ctx.save(); ctx.translate(30, y0+cell*2.5); ctx.rotate(-Math.PI/2); ctx.fillText('QUERY ↓',0,0); ctx.restore();
+  // heatmap
+  let maxF=0, focus='';
+  for(let i=0;i<5;i++){
+    for(let j=0;j<5;j++){
+      const v=S[i][j];
+      if(i===selRow && v>maxF){ maxF=v; focus=WORDS[j]; }
+      ctx.fillStyle=`rgba(244,63,94,${v.toFixed(3)})`;
+      ctx.fillRect(x0+j*cell, y0+i*cell, cell-3, cell-3);
+      ctx.strokeStyle='#0b1220'; ctx.strokeRect(x0+j*cell, y0+i*cell, cell-3, cell-3);
+      if(v>0.15){
+        ctx.fillStyle='#fff'; ctx.font='10px sans-serif';
+        ctx.fillText((v*100).toFixed(0), x0+j*cell+cell/2-6, y0+i*cell+cell/2+3);
+      }
+    }
+  }
+  // row highlight
+  ctx.strokeStyle='#facc15'; ctx.lineWidth=3;
+  ctx.strokeRect(x0-4, y0+selRow*cell-4, 5*cell+2, cell+2);
+  // labels
+  ctx.textAlign='center'; ctx.fillStyle='#e2e8f0'; ctx.font='13px sans-serif';
+  for(let j=0;j<5;j++) ctx.fillText(WORDS[j], x0+j*cell+cell/2, y0+5*cell+20);
+  for(let i=0;i<5;i++) ctx.fillText(WORDS[i], x0-18, y0+i*cell+cell/2);
+  // weighted sum output
+  ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('คำที่ถูกมองมากที่สุดจาก "'+WORDS[selRow]+'":', 40, y0+5*cell+52);
+  ctx.fillStyle='#fda4af'; ctx.font='bold 16px sans-serif';
+  ctx.fillText(focus||'—', 40, y0+5*cell+76);
+
+  document.getElementById('qword').textContent = WORDS[selRow];
+  document.getElementById('focus').textContent = focus||'—';
+  document.getElementById('tempVal').textContent = (+document.getElementById('temp').value).toFixed(1);
+  drawArch();
+}
+
+cv.addEventListener('click', e=>{
+  const rect=cv.getBoundingClientRect();
+  const px=(e.clientX-rect.left)*(cv.width/rect.width), py=(e.clientY-rect.top)*(cv.height/rect.height);
+  const cell=48, x0=130, y0=80;
+  if(px>=x0&&px<x0+5*cell&&py>=y0&&py<y0+5*cell){
+    selRow=Math.floor((py-y0)/cell);
+    draw();
+  }
+});
+
+document.getElementById('temp').oninput=()=>draw();
+document.getElementById('shuffleBtn').onclick=newData;
+
+function drawArch(){
+  const a=document.getElementById('arch');
+  const box=(x,y,w,h,label,color)=>`
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${color}" stroke="#475569" stroke-width="1.5"/>
+    <text x="${x+w/2}" y="${y+h/2+5}" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">${label}</text>`;
+  let s='';
+  s+=box(150,20,120,36,'Output', '#9f1239');
+  s+=box(150,70,120,36,'Linear', '#881337');
+  s+=box(150,120,120,36,'Add & Norm', '#9f1239');
+  s+=box(150,170,120,36,'Feed Forward', '#881337');
+  s+=box(150,220,120,36,'Add & Norm', '#9f1239');
+  s+=box(150,270,120,36,'Multi-Head Attention', '#be123c');
+  s+=box(20,330,120,36,'Embedding', '#4c1d95');
+  s+=box(150,330,120,36,'Positional Encoding', '#4c1d95');
+  s+=box(20,380,120,36,'Input ข้อความ', '#312e81');
+  s+=box(290,330,120,36,'Embedding', '#4c1d95');
+  s+=box(290,380,120,36,'Output (เลื่อนขวา)', '#312e81');
+  // arrows
+  s+=`<path d="M210 56 V70 M210 106 V120 M210 156 V170 M210 206 V220 M210 256 V270" stroke="#64748b" stroke-width="2" marker-end="url(#a2)"/>`;
+  s+=`<path d="M80 348 H150 M210 348 H290" stroke="#64748b" stroke-width="2" marker-end="url(#a2)"/>`;
+  s+=`<path d="M80 398 V348" stroke="#64748b" stroke-width="2" marker-end="url(#a2)"/>`;
+  s+=`<path d="M350 398 V348" stroke="#64748b" stroke-width="2" marker-end="url(#a2)"/>`;
+  s+=`<text x="210" y="475" fill="#94a3b8" font-size="11" text-anchor="middle">Encoder-Decoder Attention</text>`;
+  s+=`<defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#64748b"/></marker></defs>`;
+  a.innerHTML=s;
+}
+
+newData();
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning Visualizations — One-Page Interactive Demos</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#1e1b4b,#0ea5e9 60%,#22c55e);padding:64px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:44px;margin-top:14px}
+  .sub{margin-top:10px;opacity:.9;max-width:640px;margin-inline:auto}
+  main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  h2{font-size:26px;margin:36px 0 18px;border-left:4px solid var(--ac,#3b82f6);padding-left:14px}
+  h2 small{font-size:14px;opacity:.6;font-weight:400;margin-left:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  a.card{display:block;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px;text-decoration:none;color:#e2e8f0;transition:transform .15s,border-color .15s}
+  a.card:hover{transform:translateY(-3px);border-color:var(--ac)}
+  a.card .num{font-size:12px;color:var(--ac);font-weight:700;letter-spacing:1px}
+  a.card .name{font-size:17px;font-weight:700;margin-top:6px}
+  a.card .desc{font-size:13px;opacity:.65;margin-top:6px;line-height:1.5}
+  a.card .tag{display:inline-block;margin-top:10px;font-size:11px;padding:3px 10px;border-radius:999px;background:color-mix(in srgb,var(--ac) 18%,transparent);color:var(--ac)}
+  .super a.card{--ac:#3b82f6}
+  .unsup a.card{--ac:#a78bfa}
+  .rl a.card{--ac:#34d399}
+  section.desc-box{background:#1e293b;border-radius:14px;padding:20px 24px;margin-top:40px;font-size:14px;opacity:.9}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  @media(max-width:700px){h1{font-size:30px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">MACHINE LEARNING · INTERACTIVE VISUALIZATION</div>
+  <h1>Machine Learning Visualizations</h1>
+  <p class="sub">One-page HTML แบบเล่นได้จริง ครบ 14 หัวข้อ — คลิกเข้าไปลองปรับค่าดูโมเดลทำงานแบบเรียลไทม์</p>
+</header>
+<main>
+  <h2 class="super">📗 Supervised Learning <small>เรียนรู้จากข้อมูลที่มีคำตอบ (label)</small></h2>
+  <div class="grid">
+    <a class="card" href="Supervised-Learning/01-Linear-Regression/index.html">
+      <div class="num">01</div><div class="name">Linear Regression</div>
+      <div class="desc">หาเส้นตรงที่ฟิตข้อมูล ลากจุดดูสมการเปลี่ยน</div>
+      <div class="tag">Regression</div>
+    </a>
+    <a class="card" href="Supervised-Learning/02-Logistic-Regression/index.html">
+      <div class="num">02</div><div class="name">Logistic Regression</div>
+      <div class="desc">Sigmoid + เส้นแบ่ง class ฝึกด้วย Gradient Descent</div>
+      <div class="tag">Classification</div>
+    </a>
+    <a class="card" href="Supervised-Learning/03-KNN/index.html">
+      <div class="num">03</div><div class="name">k-Nearest Neighbors</div>
+      <div class="desc">เพื่อนบ้าน k ตัวโหวต — เลื่อน k ดูผลทันที</div>
+      <div class="tag">Classification</div>
+    </a>
+    <a class="card" href="Supervised-Learning/04-Decision-Tree/index.html">
+      <div class="num">04</div><div class="name">Decision Tree</div>
+      <div class="desc">เติบโตต้นไม้ทีละชั้น ดูเส้นแบ่ง + โครงสร้าง</div>
+      <div class="tag">Classification</div>
+    </a>
+    <a class="card" href="Supervised-Learning/05-Random-Forest/index.html">
+      <div class="num">05</div><div class="name">Random Forest</div>
+      <div class="desc">ต้นไม้ 60 ต้นโหวต — เส้นแบ่งรวมที่แม่นกว่า</div>
+      <div class="tag">Ensemble</div>
+    </a>
+    <a class="card" href="Supervised-Learning/06-SVM/index.html">
+      <div class="num">06</div><div class="name">SVM</div>
+      <div class="desc">Max-margin + Support Vectors + Hinge Loss</div>
+      <div class="tag">Classification</div>
+    </a>
+    <a class="card" href="Supervised-Learning/07-K-Means/index.html">
+      <div class="num">07</div><div class="name">K-Means</div>
+      <div class="desc">จัดกลุ่มข้อมูลไร้ label ทีละขั้นตอน</div>
+      <div class="tag">Clustering</div>
+    </a>
+    <a class="card" href="Supervised-Learning/08-MLP-Neural-Network/index.html">
+      <div class="num">08</div><div class="name">MLP (Neural Network)</div>
+      <div class="desc">4-2-1 โครงข่ายเรียนรู้ XOR + Backpropagation</div>
+      <div class="tag">Deep Learning</div>
+    </a>
+    <a class="card" href="Supervised-Learning/13-XGBoost/index.html">
+      <div class="num">13</div><div class="name">XGBoost</div>
+      <div class="desc">Boosting — ต้นไม้ใหม่แก้ residual ของต้นเก่า</div>
+      <div class="tag">Gradient Boosting</div>
+    </a>
+    <a class="card" href="Supervised-Learning/14-Stacking/index.html">
+      <div class="num">14</div><div class="name">Stacking</div>
+      <div class="desc">โมเดลพื้นฐาน 3 ตัว → meta-model รวมคำตอบ</div>
+      <div class="tag">Meta-Learning</div>
+    </a>
+  </div>
+
+  <h2 class="unsup">📙 Unsupervised Learning <small>เรียนรู้จากข้อมูลที่ไม่มีคำตอบ</small></h2>
+  <div class="grid">
+    <a class="card" href="Unsupervised-Learning/09-CNN/index.html">
+      <div class="num">09</div><div class="name">CNN</div>
+      <div class="desc">วาดภาพ 7×7 ดู kernel สแกนหา edge</div>
+      <div class="tag">Computer Vision</div>
+    </a>
+    <a class="card" href="Unsupervised-Learning/10-LSTM/index.html">
+      <div class="num">10</div><div class="name">LSTM</div>
+      <div class="desc">ประตู forget/input/output ควบคุมความจำ</div>
+      <div class="tag">Sequence</div>
+    </a>
+    <a class="card" href="Unsupervised-Learning/11-Transformer/index.html">
+      <div class="num">11</div><div class="name">Transformer</div>
+      <div class="desc">Self-Attention heatmap — ทุกคำมองกันหมด</div>
+      <div class="tag">NLP / LLM</div>
+    </a>
+  </div>
+
+  <h2 class="rl">📘 Reinforcement Learning <small>เรียนรู้จากการลองผิดลองถูก + รางวัล</small></h2>
+  <div class="grid">
+    <a class="card" href="Reinforcement-Learning/12-Reinforcement-Learning/index.html">
+      <div class="num">12</div><div class="name">Reinforcement Learning</div>
+      <div class="desc">Q-Learning: เอเจนต์หาทางไปดาว ⭐ ทีละ episode</div>
+      <div class="tag">Q-Learning</div>
+    </a>
+  </div>
+
+  <section class="desc-box">
+    <b>วิธีใช้งาน:</b> แต่ละหน้าเป็นไฟล์ HTML ไฟล์เดียว (self-contained) เปิดได้ทันทีในเบราว์เซอร์โดยไม่ต้องติดตั้งอะไร — ดาวน์โหลดทั้งโฟลเดอร์แล้วเปิด <code>index.html</code> หรือเปิดผ่าน GitHub Pages ก็ได้
+  </section>
+</main>
+<footer>Machine Learning Visualization · 14 Interactive One-Page Demos</footer>
+</body>
+</html>

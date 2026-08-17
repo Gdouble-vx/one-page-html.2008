@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Forest — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#052e16,#15803d);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #22c55e;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#15803d;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#166534}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#4ade80}
+  .bars{margin-top:16px}
+  .barrow{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px}
+  .barwrap{flex:1;background:#1e293b;border-radius:6px;height:18px;overflow:hidden}
+  .bar{height:100%;border-radius:6px}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#86efac;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · ENSEMBLE</div>
+  <h1>Random Forest</h1>
+  <p class="sub">ป่าสุ่ม — ฝึกต้นไม้ตัดสินใจหลายร้อยต้นด้วยข้อมูลสุ่มต่างกัน แล้วให้ทุกต้นโหวต "ภูมิปัญญาของฝูงชน" ทำให้แม่นยำและทนต่อ overfit</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">กด "สร้างป่า" เพื่อฝึก Random Forest จำนวน 60 ต้น — เส้นแบ่งกลายเป็นขอบเขตแบบรวมของหลายต้นที่โหวตกัน</p>
+    <canvas id="demo" width="880" height="440"></canvas>
+    <div class="controls">
+      <button id="forestBtn">🌲 สร้างป่า (60 ต้น)</button>
+      <button id="oneBtn" class="secondary">🌳 เพิ่มต้นไม้อีก 1 ต้น</button>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่</button>
+      <span class="hint">💡 ดูการโหวตของต้นไม้แต่ละต้นที่กราฟแท่งด้านล่าง</span>
+    </div>
+    <div class="stats">
+      <div class="stat">จำนวนต้นไม้: <b id="nTrees">0</b></div>
+      <div class="stat">Accuracy (ชุดฝึก): <b id="acc">—</b></div>
+      <div class="stat">Accuracy ต้นเดียว (เฉลี่ย): <b id="single">—</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">ผลรวม = vote( ต้น₁ + ต้น₂ + ... + ต้นₙ )&nbsp;&nbsp;·&nbsp;&nbsp;Bagging + Random feature selection</div>
+    <ol>
+      <li><b>Bootstrap sampling:</b> สุ่มหยิบข้อมูลฝึกแบบคืนที่ (sampling with replacement) ให้แต่ละต้นได้ข้อมูลชุดต่างกัน</li>
+      <li><b>Random feature:</b> ในแต่ละ split แต่ละต้นเลือกพิจารณาแค่ subset ของ features แบบสุ่ม</li>
+      <li>ฝึกต้นไม้จำนวนมาก (หลายร้อยต้น) แต่ละต้นไม่สมบูรณ์แบบ — "weak learner"</li>
+      <li>เวลาทำนาย ให้ทุกต้นโหวต แล้วใช้เสียงข้างมากเป็นคำตอบสุดท้าย</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">การสุ่ม 2 อย่างนี้ทำให้แต่ละต้น "ผิดคนละแบบ" เมื่อรวมกันแล้ว error ต่าง ๆ หักล้างกัน → โมเดลรวมแม่นกว่าและไม่ overfit</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำสูง ลด overfit จากต้นไม้เดี่ยวได้มาก</li>
+        <li>รับทั้งตัวเลขและหมวดหมู่ ไม่ต้องปรับขนาดข้อมูล</li>
+        <li>วัดความสำคัญของ feature (feature importance) ได้ฟรี</li>
+        <li>เทรนแบบขนานได้ (แต่ละต้นอิสระต่อกัน)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ช้ากว่าและใช้หน่วยความจำมากกว่าต้นไม้เดี่ยว</li>
+        <li>ตีความผลลัพธ์ยากขึ้น (ยังดีกว่า neural network)</li>
+        <li>อาจ overfit ข้อมูลที่มี noise สูงมาก</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>ธนาคาร: คะแนนเครดิตและการตรวจจับการฉ้อโกง</li>
+      <li>แพทย์: ทำนายการเกิดโรคจากข้อมูลสุขภาพ</li>
+      <li>การตลาด: พยากรณ์ลูกค้าที่จะเลิกใช้บริการ</li>
+      <li>Remote sensing: จำแนกประเภทการใช้ที่ดินจากภาพถ่ายดาวเทียม</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Random Forest</footer>
+
+<script>
+const cv = document.getElementById('demo');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const PAD = 30;
+
+let pts = [];
+let trees = [];
+
+function randomData(n=44){
+  pts = [];
+  // two interleaved clusters + noise
+  const c1 = {x:W*0.32, y:H*0.38}, c2 = {x:W*0.68, y:H*0.62};
+  for(let i=0;i<n;i++){
+    const c = Math.random()<0.5 ? 0 : 1;
+    const ctr = c===0 ? c1 : c2;
+    pts.push({x:ctr.x+(Math.random()*170-85), y:ctr.y+(Math.random()*170-85), c});
+  }
+  trees = [];
+  draw();
+}
+
+function gini(inds){
+  if(!inds.length) return 0;
+  const p0 = inds.filter(i=>pts[i].c===0).length/inds.length;
+  return 1 - p0*p0 - (1-p0)*(1-p0);
+}
+
+// random stump: random feature + threshold chosen to minimize gini
+function trainStump(boot){
+  let best = null;
+  const f = Math.random()<0.5 ? 'x' : 'y';
+  const vals = [...new Set(boot.map(i=>pts[i][f]))].sort((a,b)=>a-b);
+  for(let v=1;v<vals.length;v++){
+    const t=(vals[v-1]+vals[v])/2;
+    const L=boot.filter(i=>pts[i][f]<=t), R=boot.filter(i=>pts[i][f]>t);
+    if(L.length<3||R.length<3) continue;
+    const imp = gini(boot) - (L.length/boot.length)*gini(L) - (R.length/boot.length)*gini(R);
+    if(!best||imp>best.imp) best={f,t,imp};
+  }
+  return best;
+}
+
+function addTree(){
+  // bootstrap sample
+  const boot=[];
+  for(let i=0;i<pts.length;i++) boot.push(Math.floor(Math.random()*pts.length));
+  const stump = trainStump(boot);
+  if(!stump) return false;
+  const L = boot.filter(i=>pts[i][stump.f]<=stump.t);
+  const R = boot.filter(i=>pts[i][stump.f]>stump.t);
+  const maj = inds=>{
+    const n0=inds.filter(i=>pts[i].c===0).length;
+    return n0>=inds.length/2?0:1;
+  };
+  trees.push({
+    f: stump.f, t: stump.t,
+    l: maj(L), r: maj(R),
+    boot
+  });
+  return true;
+}
+
+function treePred(t, p){
+  return p[t.f] <= t.t ? t.l : t.r;
+}
+
+function forestPred(p){
+  let v0=0, v1=0;
+  for(const t of trees){ treePred(t,p)===0 ? v0++ : v1++; }
+  return v0>=v1 ? 0 : 1;
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,W,H);
+  // decision regions via pixel sampling
+  if(trees.length){
+    const step = 8;
+    for(let y=PAD;y<H-PAD;y+=step){
+      for(let x=PAD;x<W-PAD;x+=step){
+        const pred = forestPred({x,y});
+        ctx.fillStyle = pred===0 ? 'rgba(96,165,250,.16)' : 'rgba(251,146,60,.16)';
+        ctx.fillRect(x, y, step, step);
+      }
+    }
+  }
+  ctx.strokeStyle='#1e293b'; ctx.lineWidth=1;
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath();ctx.moveTo(i,PAD);ctx.lineTo(i,H-PAD);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PAD,i);ctx.lineTo(W-PAD,i);ctx.stroke();
+  }
+  // recent tree splits (last up to 12)
+  const recent = trees.slice(-12);
+  for(const t of recent){
+    ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1;
+    ctx.beginPath();
+    if(t.f==='x'){ctx.moveTo(t.t,PAD);ctx.lineTo(t.t,H-PAD);}
+    else{ctx.moveTo(PAD,t.t);ctx.lineTo(W-PAD,t.t);}
+    ctx.stroke();
+  }
+  for(const p of pts){
+    ctx.beginPath();ctx.arc(p.x,p.y,5.5,0,Math.PI*2);
+    ctx.fillStyle=p.c===0?'#60a5fa':'#fb923c';
+    ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.4)';ctx.stroke();
+  }
+  // accuracy
+  let ok=0, singleOk=0;
+  for(const p of pts){
+    if(forestPred(p)===p.c) ok++;
+    if(trees.length && treePred(trees[Math.floor(Math.random()*trees.length)],p)===p.c) singleOk++;
+  }
+  document.getElementById('nTrees').textContent = trees.length;
+  document.getElementById('acc').textContent = trees.length ? (ok/pts.length*100).toFixed(1)+'%' : '—';
+  document.getElementById('single').textContent = trees.length ? (singleOk/pts.length*100).toFixed(1)+'%' : '—';
+}
+
+document.getElementById('forestBtn').onclick = ()=>{
+  for(let i=0;i<60;i++) addTree();
+  draw();
+};
+document.getElementById('oneBtn').onclick = ()=>{ addTree(); draw(); };
+document.getElementById('resetBtn').onclick = ()=>randomData();
+
+randomData();
+</script>
+</body>
+</html>

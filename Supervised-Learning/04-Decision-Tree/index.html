@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Tree — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#1e1b4b,#4f46e5);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #6366f1;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#4f46e5;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#4338ca}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#a5b4fc}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:800px){.two{grid-template-columns:1fr}}
+  .treebox{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:10px;overflow:auto;max-height:460px}
+  svg{display:block;margin:0 auto;min-width:520px}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#c7d2fe;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · CLASSIFICATION</div>
+  <h1>Decision Tree</h1>
+  <p class="sub">ต้นไม้ตัดสินใจ — แบ่งข้อมูลด้วยคำถาม "ถ้า...แล้ว..." ซ้ำ ๆ ไปเรื่อย ๆ เหมือนแผนผังการตัดสินใจ</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">กด "เพิ่มความลึก" เพื่อให้ต้นไม้เรียนรู้การแบ่งข้อมูลทีละชั้น — ดูเส้นแบ่งบนกราฟซ้าย และโครงสร้างต้นไม้ทางขวา</p>
+    <div class="two">
+      <div>
+        <canvas id="demo" width="520" height="440"></canvas>
+      </div>
+      <div class="treebox">
+        <div id="tree"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="growBtn">🌳 เพิ่มความลึกต้นไม้</button>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่ + รีเซ็ต</button>
+      <span class="hint">💡 สีฟ้า/สีส้ม = สอง class · เส้นประสีขาว = จุดแบ่ง (split)</span>
+    </div>
+    <div class="stats">
+      <div class="stat">ความลึก: <b id="depth">0</b></div>
+      <div class="stat">จำนวนโหนด: <b id="nodes">1</b></div>
+      <div class="stat">Accuracy (ชุดฝึก): <b id="acc">—</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Gini(t) = 1 − Σ pᵢ²&nbsp;&nbsp;·&nbsp;&nbsp;เลือก split ที่ลด Gini Impurity ได้มากที่สุด</div>
+    <ol>
+      <li>ที่แต่ละโหนด ค้นหา <b>feature + ค่า threshold</b> ที่แบ่งข้อมูลออกเป็น 2 กลุ่มได้ "บริสุทธิ์" ที่สุด (Gini ต่ำสุด)</li>
+      <li>แบ่งข้อมูลตามเงื่อนไข เช่น <b>อายุ &lt; 30 → ไปซ้าย, อย่างอื่น → ไปขวา</b></li>
+      <li>ทำซ้ำในแต่ละกลุ่มย่อย (แบบ recursive) จนกว่าจะบริสุทธิ์หรือถึงความลึกที่กำหนด</li>
+      <li>โหนดปลาย (leaf) คือคำตอบสุดท้าย — class ที่มีเสียงข้างมากในกลุ่มนั้น</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>มนุษย์อ่านและอธิบายผลลัพธ์ได้ (interpretable)</li>
+        <li>ไม่ต้องปรับขนาดข้อมูล (scaling) มากนัก</li>
+        <li>จับความสัมพันธ์แบบ non-linear ได้</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ถ้าลึกเกินไป → overfit ได้ง่ายมาก (จำข้อมูลฝึกทั้งชุด)</li>
+        <li>ไม่เสถียร: ข้อมูลเปลี่ยนนิดเดียว ต้นไม้อาจเปลี่ยนทั้งต้น</li>
+        <li>เส้นแบ่งเป็นแนวตั้ง/แนวนอนเท่านั้น (axis-aligned)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>ระบบอนุมัติสินเชื่อ: "ถ้ารายได้สูง และอายุงานเกิน 2 ปี → อนุมัติ"</li>
+      <li>วินิจฉัยโรคเบื้องต้นจากอาการ</li>
+      <li>คัดกรองลูกค้าที่จะเลิกใช้บริการ (churn)</li>
+      <li>เป็นองค์ประกอบพื้นฐานของ Random Forest และ XGBoost</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Decision Tree</footer>
+
+<script>
+const cv = document.getElementById('demo');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const PAD = 30;
+
+let pts = [];
+let root = null;
+
+function randomData(n=40){
+  pts = [];
+  const c1 = {x:W*0.3, y:H*0.35}, c2 = {x:W*0.7, y:H*0.65};
+  for(let i=0;i<n;i++){
+    const c = Math.random()<0.5 ? 0 : 1;
+    const ctr = c===0 ? c1 : c2;
+    pts.push({x:ctr.x+(Math.random()*140-70), y:ctr.y+(Math.random()*140-70), c});
+  }
+  root = null;
+  draw();
+}
+
+function gini(inds){
+  if(!inds.length) return 0;
+  let p1 = inds.filter(i=>pts[i].c===0).length / inds.length;
+  return 1 - p1*p1 - (1-p1)*(1-p1);
+}
+
+function bestSplit(inds, minSize=4){
+  let best = null;
+  const feats = ['x','y'];
+  for(const f of feats){
+    const vals = [...new Set(inds.map(i=>pts[i][f]))].sort((a,b)=>a-b);
+    for(let v=1; v<vals.length; v++){
+      const t = (vals[v-1]+vals[v])/2;
+      const L = inds.filter(i=>pts[i][f] <= t);
+      const R = inds.filter(i=>pts[i][f] > t);
+      if(L.length<minSize || R.length<minSize) continue;
+      const imp = gini(inds) - (L.length/inds.length)*gini(L) - (R.length/inds.length)*gini(R);
+      if(!best || imp > best.imp) best = {f, t, L, R, imp};
+    }
+  }
+  return best;
+}
+
+function grow(node, depth){
+  if(depth<=0) return;
+  const sp = bestSplit(node.inds);
+  if(!sp || sp.imp <= 0.001) return;
+  node.split = sp;
+  node.left = {inds:sp.L, split:null, left:null, right:null};
+  node.right = {inds:sp.R, split:null, left:null, right:null};
+  grow(node.left, depth-1);
+  grow(node.right, depth-1);
+}
+
+function maxDepth(n){ return !n ? 0 : 1 + Math.max(maxDepth(n.left), maxDepth(n.right)); }
+function countNodes(n){ return !n ? 0 : 1 + countNodes(n.left) + countNodes(n.right); }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,W,H);
+  // colored regions
+  if(root){
+    paintRegion(root, PAD, PAD, W-PAD, H-PAD);
+  }
+  ctx.strokeStyle = '#1e293b';
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath(); ctx.moveTo(i,PAD); ctx.lineTo(i,H-PAD); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD,i); ctx.lineTo(W-PAD,i); ctx.stroke();
+  }
+  // points
+  for(const p of pts){
+    ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
+    ctx.fillStyle = p.c===0 ? '#60a5fa' : '#fb923c';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.stroke();
+  }
+  // split lines
+  drawSplits(root);
+  // accuracy
+  let ok = 0;
+  for(const p of pts){
+    const pred = predict(root, p);
+    if(pred===p.c) ok++;
+  }
+  document.getElementById('depth').textContent = maxDepth(root);
+  document.getElementById('nodes').textContent = countNodes(root);
+  document.getElementById('acc').textContent = root ? (ok/pts.length*100).toFixed(1)+'%' : '—';
+  drawTree(root);
+}
+
+function majority(inds){
+  const n0 = inds.filter(i=>pts[i].c===0).length;
+  return n0 >= inds.length/2 ? 0 : 1;
+}
+
+function predict(node, p){
+  if(!node || !node.split) return node ? majority(node.inds) : 0;
+  if(p[node.split.f] <= node.split.t) return predict(node.left, p);
+  return predict(node.right, p);
+}
+
+function paintRegion(node, x0, y0, x1, y1){
+  if(!node) return;
+  if(!node.split){
+    const c = majority(node.inds);
+    ctx.fillStyle = c===0 ? 'rgba(96,165,250,.18)' : 'rgba(251,146,60,.18)';
+    ctx.fillRect(x0, y0, x1-x0, y1-y0);
+    return;
+  }
+  const s = node.split;
+  if(s.f==='x'){
+    paintRegion(node.left, x0, y0, s.t, y1);
+    paintRegion(node.right, s.t, y0, x1, y1);
+  } else {
+    paintRegion(node.left, x0, y0, x1, s.t);
+    paintRegion(node.right, x0, s.t, x1, y1);
+  }
+}
+
+function drawSplits(node, x0=PAD, y0=PAD, x1=W-PAD, y1=H-PAD){
+  if(!node || !node.split) return;
+  const s = node.split;
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 2;
+  ctx.setLineDash([6,5]);
+  ctx.beginPath();
+  if(s.f==='x'){ ctx.moveTo(s.t, y0); ctx.lineTo(s.t, y1); }
+  else { ctx.moveTo(x0, s.t); ctx.lineTo(x1, s.t); }
+  ctx.stroke(); ctx.setLineDash([]);
+  drawSplits(node.left, x0, y0, s.f==='x'?s.t:x1, s.f==='y'?s.t:y1);
+  drawSplits(node.right, s.f==='x'?s.t:x0, s.f==='y'?s.t:y0, x1, y1);
+}
+
+// SVG tree
+function drawTree(node){
+  const el = document.getElementById('tree');
+  if(!node){ el.innerHTML = '<p style="color:#64748b;padding:8px">กด "เพิ่มความลึก" เพื่อสร้างต้นไม้...</p>'; return; }
+  const layout = {};
+  let nextId = 0;
+  function place(n, depth, x){
+    if(!n){ return; }
+    n.id = nextId++;
+    n.x = x; n.y = 40 + depth*64;
+    const w = n.left || n.right ? 120 : 0;
+    place(n.left, depth+1, x - 70 - (w/2));
+    place(n.right, depth+1, x + 70 + (w/2));
+  }
+  place(node, 0, 260);
+  let s = '';
+  function link(n){
+    if(!n) return;
+    if(n.left) s += `<line x1="${n.x}" y1="${n.y}" x2="${n.left.x}" y2="${n.left.y}" stroke="#475569" stroke-width="1.5"/>`;
+    if(n.right) s += `<line x1="${n.x}" y1="${n.y}" x2="${n.right.x}" y2="${n.right.y}" stroke="#475569" stroke-width="1.5"/>`;
+    link(n.left); link(n.right);
+  }
+  link(node);
+  function nodeSvg(n){
+    const isLeaf = !n.split;
+    const major = majority(n.inds);
+    const label = isLeaf
+      ? `Class ${major===0?'A':'B'} (${n.inds.length})`
+      : `${n.split.f==='x'?'X':'Y'} ≤ ${n.split.t.toFixed(0)}`;
+    const fill = isLeaf ? (major===0?'#2563eb':'#ea580c') : '#1e293b';
+    const w = isLeaf ? 90 : 120, h = 34;
+    s += `<rect x="${n.x-w/2}" y="${n.y-h/2}" width="${w}" height="${h}" rx="10" fill="${fill}" stroke="#475569"/>`;
+    s += `<text x="${n.x}" y="${n.y+5}" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">${label}</text>`;
+    nodeSvg(n.left); nodeSvg(n.right);
+  }
+  nodeSvg(node);
+  const h = maxDepth(node)*64 + 60;
+  el.innerHTML = `<svg width="520" height="${Math.max(h,120)}" style="background:#0b1220">${s}</svg>`;
+}
+
+document.getElementById('growBtn').onclick = ()=>{
+  if(!root){ root = {inds:pts.map((_,i)=>i), split:null, left:null, right:null}; }
+  const d = maxDepth(root);
+  grow(root, d+1);
+  draw();
+};
+document.getElementById('resetBtn').onclick = ()=>{ randomData(); };
+
+randomData();
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XGBoost — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#78350f,#f59e0b);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #f59e0b;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:800px){.two{grid-template-columns:1fr}}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#f59e0b;color:#1e293b;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700}
+  button:hover{background:#d97706}
+  button.secondary{background:#334155;color:#e2e8f0}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#fbbf24}
+  .treebox{background:#0b1220;border:1px solid #1e293b;border-radius:12px;padding:12px;max-height:420px;overflow:auto;font-size:13px}
+  .treeitem{border:1px solid #334155;border-radius:8px;padding:8px 12px;margin-bottom:8px;background:#111c33}
+  .treeitem b{color:#fbbf24}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fde68a;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · GRADIENT BOOSTING · ENSEMBLE</div>
+  <h1>XGBoost</h1>
+  <p class="sub">Extreme Gradient Boosting — ฝึกต้นไม้ทีละต้นซ้ำ ๆ โดยต้นใหม่แต่ละต้นเรียนรู้จาก <b>ความผิดพลาด (residuals)</b> ของต้นก่อนหน้า จนกลายเป็นโมเดลที่ชนะการแข่งขัน Kaggle มากมาย</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">กด "เพิ่มต้นไม้" ทีละต้นเพื่อดู Boosting ทำงาน — ต้นไม้ต้นใหม่แก้จุดที่ต้นก่อนหน้าทำผิด ดู loss ลดลงในกราฟขวา</p>
+    <div class="two">
+      <div>
+        <canvas id="demo" width="520" height="440"></canvas>
+        <div class="stats">
+          <div class="stat">จำนวนต้นไม้: <b id="nT">0</b></div>
+          <div class="stat">Loss (LogLoss): <b id="loss">—</b></div>
+          <div class="stat">Accuracy: <b id="acc">—</b></div>
+        </div>
+      </div>
+      <div>
+        <canvas id="lossCv" width="520" height="200"></canvas>
+        <div class="treebox" id="trees"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="addBtn">➕ เพิ่มต้นไม้ 1 ต้น</button>
+      <button id="boostBtn">🚀 Boost 50 ต้น</button>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่ + รีเซ็ต</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Fₜ(x) = Fₜ₋₁(x) + η · treeₜ(x)&nbsp;&nbsp;&nbsp;โดย treeₜ เรียนรู้จาก residual ของรอบก่อนหน้า</div>
+    <ol>
+      <li>เริ่มจากคำทำนายพื้นฐาน (เช่น ค่าเฉลี่ย/ความน่าจะเป็น 0.5)</li>
+      <li>คำนวณ <b>residual</b> = ค่าจริง − ค่าที่ทำนาย (จุดที่โมเดลยังผิดอยู่)</li>
+      <li>ฝึกต้นไม้ต้นใหม่ให้ "เดา residual" ของต้นก่อนหน้าให้ถูก</li>
+      <li>เพิ่มต้นไม้นี้เข้ากับโมเดลด้วยสัดส่วนเล็กน้อย <b>learning rate (η)</b> เพื่อไม่ให้ก้าวใหญ่เกินไป</li>
+      <li>ทำซ้ำหลายร้อยรอบ — ทีละเล็กทีละน้อยโมเดลก็แม่นขึ้นเรื่อย ๆ</li>
+    </ol>
+    <p class="lead" style="margin-top:12px"><b>ทำไมถึงเก่ง:</b> XGBoost เพิ่มเทคนิคหลายอย่าง — second-order gradient, regularization, ข้าม missing value, parallel training, pruning อัตโนมัติ — ทำให้เร็วและแม่นกว่า Gradient Boosting ทั่วไป</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำที่สุดในบรรดาโมเดลตารางข้อมูล (tabular)</li>
+        <li>เร็วมากด้วย parallel + cache optimization</li>
+        <li>มี regularization ในตัว → ลด overfit</li>
+        <li>จัดการ missing value ได้เอง</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องปรับ hyperparameter หลายตัว (n_estimators, max_depth, eta...)</li>
+        <li>ฝึกช้าเมื่อข้อมูลมหาศาลและรอบเยอะ</li>
+        <li>ไม่เหมาะกับข้อมูล unstructured (ภาพ/ข้อความ) เท่า deep learning</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>ชนะการแข่งขัน Kaggle หลายรายการ (tabular data)</li>
+      <li>คะแนนเครดิตและการตรวจจับการฉ้อโกง</li>
+      <li>ทำนายการคลิกโฆษณา (CTR prediction)</li>
+      <li>พยากรณ์ยอดขายและความต้องการสินค้า</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · XGBoost</footer>
+
+<script>
+const cv=document.getElementById('demo'), ctx=cv.getContext('2d');
+const lv=document.getElementById('lossCv'), lctx=lv.getContext('2d');
+const W=cv.width,H=cv.height,PAD=30;
+
+let pts=[], F=[], trees=[], losses=[];
+
+function randomData(n=44){
+  pts=[];
+  const c1={x:W*0.3,y:H*0.35}, c2={x:W*0.7,y:H*0.65};
+  for(let i=0;i<n;i++){
+    const c=Math.random()<0.5?0:1;
+    const ctr=c===0?c1:c2;
+    pts.push({x:ctr.x+(Math.random()*160-80), y:ctr.y+(Math.random()*160-80), y_: c===0?0:1});
+  }
+  reset();
+}
+function reset(){
+  trees=[]; losses=[]; F=pts.map(()=>0);
+  draw();
+}
+function sigmoid(z){ return 1/(1+Math.exp(-z)); }
+function logLoss(){
+  let L=0;
+  for(let i=0;i<pts.length;i++){
+    const p=sigmoid(F[i]);
+    L += -pts[i].y_*Math.log(p+1e-9)-(1-pts[i].y_)*Math.log(1-p+1e-9);
+  }
+  return L/pts.length;
+}
+
+// fit a stump to residuals with weighted least squares
+function addTree(){
+  // residuals (gradient of logloss)
+  const r = pts.map((p,i)=>pts[i].y_ - sigmoid(F[i]));
+  let best=null;
+  for(const f of ['x','y']){
+    const vals=[...new Set(pts.map(p=>p[f]))].sort((a,b)=>a-b);
+    for(let v=1;v<vals.length;v++){
+      const t=(vals[v-1]+vals[v])/2;
+      const idxL=[], idxR=[];
+      for(let i=0;i<pts.length;i++){ pts[i][f]<=t ? idxL.push(i) : idxR.push(i); }
+      if(idxL.length<3||idxR.length<3) continue;
+      // SSE of residuals
+      const mL=idxL.reduce((s,i)=>s+r[i],0)/idxL.length;
+      const mR=idxR.reduce((s,i)=>s+r[i],0)/idxR.length;
+      const sseL=idxL.reduce((s,i)=>s+(r[i]-mL)**2,0);
+      const sseR=idxR.reduce((s,i)=>s+(r[i]-mR)**2,0);
+      if(!best || sseL+sseR<best.sse) best={f,t,L:idxL,R:idxR,mL,mR,sse:sseL+sseR};
+    }
+  }
+  if(!best) return;
+  const eta=0.35;
+  // update F
+  for(const i of best.L) F[i]+=eta*best.mL;
+  for(const i of best.R) F[i]+=eta*best.mR;
+  trees.push({f:best.f, t:best.t, l:eta*best.mL, r:eta*best.mR});
+  losses.push(logLoss());
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,W,H);
+  if(trees.length){
+    const step=8;
+    for(let y=PAD;y<H-PAD;y+=step){
+      for(let x=PAD;x<W-PAD;x+=step){
+        let z=0;
+        for(const t of trees){ z += (t.f==='x' ? x<=t.t : y<=t.t) ? t.l : t.r; }
+        const p=sigmoid(z);
+        ctx.fillStyle=`rgba(${Math.round(251+(96-251)*p)},${Math.round(146+(165-146)*p)},${Math.round(60+(250-60)*p)},.16)`;
+        ctx.fillRect(x,y,step,step);
+      }
+    }
+    // tree splits
+    for(const t of trees.slice(-8)){
+      ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1;
+      ctx.beginPath();
+      if(t.f==='x'){ctx.moveTo(t.t,PAD);ctx.lineTo(t.t,H-PAD);}
+      else{ctx.moveTo(PAD,t.t);ctx.lineTo(W-PAD,t.t);}
+      ctx.stroke();
+    }
+  }
+  ctx.strokeStyle='#1e293b';
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath();ctx.moveTo(i,PAD);ctx.lineTo(i,H-PAD);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PAD,i);ctx.lineTo(W-PAD,i);ctx.stroke();
+  }
+  for(const p of pts){
+    ctx.beginPath();ctx.arc(p.x,p.y,5.5,0,Math.PI*2);
+    ctx.fillStyle=p.y_===0?'#60a5fa':'#fb923c';
+    ctx.fill();ctx.strokeStyle='rgba(0,0,0,.4)';ctx.stroke();
+  }
+  // stats
+  document.getElementById('nT').textContent=trees.length;
+  document.getElementById('loss').textContent=trees.length?losses[losses.length-1].toFixed(4):'—';
+  let ok=0;
+  for(let i=0;i<pts.length;i++) if((sigmoid(F[i])>=0.5?1:0)===pts[i].y_) ok++;
+  document.getElementById('acc').textContent=trees.length?(ok/pts.length*100).toFixed(1)+'%':'—';
+  // loss curve
+  lctx.clearRect(0,0,lv.width,lv.height);
+  lctx.fillStyle='#0b1220'; lctx.fillRect(0,0,lv.width,lv.height);
+  lctx.strokeStyle='#334155';
+  for(let i=0;i<lv.width;i+=40){ lctx.beginPath();lctx.moveTo(i,0);lctx.lineTo(i,lv.height);lctx.stroke(); }
+  lctx.strokeStyle='#fbbf24'; lctx.lineWidth=2;
+  if(losses.length>1){
+    const min=Math.min(...losses), max=Math.max(...losses);
+    const range=(max-min)||1;
+    lctx.beginPath();
+    for(let i=0;i<losses.length;i++){
+      const x=30+i/(losses.length-1)*(lv.width-60);
+      const y=lv.height-30-(losses[i]-min)/range*(lv.height-60);
+      i===0?lctx.moveTo(x,y):lctx.lineTo(x,y);
+    }
+    lctx.stroke();
+  }
+  lctx.fillStyle='#64748b'; lctx.font='11px sans-serif'; lctx.textAlign='left';
+  lctx.fillText('LogLoss ลดลงเมื่อมีต้นไม้เพิ่มขึ้น →', 20, 20);
+  // tree list
+  const el=document.getElementById('trees');
+  el.innerHTML = trees.length===0
+    ? '<p style="color:#64748b">กด "เพิ่มต้นไม้" เพื่อเริ่ม Boosting...</p>'
+    : trees.slice(-12).map((t,i)=>`
+      <div class="treeitem">🌳 ต้นที่ ${i+1}: ถ้า <b>${t.f==='x'?'X':'Y'} ≤ ${t.t.toFixed(0)}</b> → +${t.l.toFixed(3)} &nbsp;|&nbsp; อย่างอื่น → ${t.r.toFixed(3)}</div>`).join('');
+}
+
+document.getElementById('addBtn').onclick=()=>{ addTree(); draw(); };
+document.getElementById('boostBtn').onclick=()=>{ for(let i=0;i<50;i++) addTree(); draw(); };
+document.getElementById('resetBtn').onclick=()=>randomData();
+
+randomData();
+</script>
+</body>
+</html>

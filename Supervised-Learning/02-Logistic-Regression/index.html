@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logistic Regression — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#7c2d12,#ea580c);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #f97316;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block;touch-action:none}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#ea580c;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#c2410c}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#fb923c}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fdba74;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · CLASSIFICATION</div>
+  <h1>Logistic Regression</h1>
+  <p class="sub">การถดถอยโลจิสติก — แม้ชื่อมี "Regression" แต่ใช้แบ่งประเภท (classification) โดยทำนายความน่าจะเป็น 0–1 ผ่านฟังก์ชัน Sigmoid</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">คลิกบนกราฟเพื่อเพิ่มจุด (สีส้ม = class 1, สีน้ำเงิน = class 0) แล้วกด "ฝึกโมเดล" เพื่อดูเส้นแบ่งเรียนรู้แบบไล่ทีละขั้น</p>
+    <canvas id="demo" width="880" height="440"></canvas>
+    <div class="controls">
+      <button id="trainBtn">🏋️ ฝึกโมเดล (Gradient Descent)</button>
+      <button id="stepBtn" class="secondary">👣 ก้าวทีละ 1 ขั้น</button>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่</button>
+      <button id="clearBtn" class="secondary">🗑 ล้าง</button>
+      <label style="font-size:14px;margin-left:auto">Class ที่จะวาด: 
+        <select id="classSel" style="background:#1e293b;color:#e2e8f0;padding:6px;border-radius:6px;border:1px solid #334155">
+          <option value="1">สีส้ม (1)</option>
+          <option value="0">สีน้ำเงิน (0)</option>
+        </select>
+      </label>
+    </div>
+    <div class="stats">
+      <div class="stat">Epoch: <b id="ep">0</b></div>
+      <div class="stat">Loss (BCE): <b id="loss">—</b></div>
+      <div class="stat">Accuracy: <b id="acc">—</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <p class="lead">แทนที่จะทำนายค่าตรง ๆ Logistic Regression คำนวณ <b>ความน่าจะเป็น</b> ผ่านฟังก์ชัน Sigmoid ซึ่งบีบผลลัพธ์ให้อยู่ในช่วง 0–1 เสมอ</p>
+    <div class="formula">z = w₁x₁ + w₂x₂ + b&nbsp;&nbsp;&nbsp;ŷ = σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
+    <ol>
+      <li>คำนวณผลรวมถ่วงน้ำหนัก <b>z</b> จาก features ทั้งหมด (เหมือน Linear Regression)</li>
+      <li>ส่ง <b>z</b> เข้าฟังก์ชัน <b>Sigmoid</b> → ได้ค่าความน่าจะเป็นระหว่าง 0 ถึง 1</li>
+      <li>ถ้า ŷ ≥ 0.5 ทำนายเป็น class 1, ถ้า &lt; 0.5 ทำนายเป็น class 0</li>
+      <li>ฝึกด้วย <b>Binary Cross-Entropy Loss</b> + ปรับน้ำหนักด้วย Gradient Descent</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">จุดตัดของเส้นแบ่งคือตำแหน่งที่ σ(z) = 0.5 หรือ z = 0 — ด้านหนึ่งของเส้นเป็น class 0 อีกด้านเป็น class 1</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>ให้ความน่าจะเป็น ไม่ใช่แค่คำตอบ — นำไปใช้ตัดสินใจต่อได้</li>
+        <li>เร็ว ฝึกง่าย เหมาะกับข้อมูลขนาดใหญ่</li>
+        <li>ตีความได้: ค่าสัมประสิทธิ์บอกทิศทางและขนาดของผลต่อ class</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>เส้นแบ่งเป็นเส้นตรง — ไม่เหมาะกับข้อมูลที่ซับซ้อนแบบ non-linear</li>
+        <li>ไวต่อ multicollinearity (ตัวแปรมีความสัมพันธ์กันเองสูง)</li>
+        <li>ถ้าข้อมูลสอง class แยกกันชัดเจนมาก น้ำหนักอาจพองโต (ถ้าไม่มี regularization)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>คัดกรองอีเมลสแปม (สแปม / ไม่สแปม)</li>
+      <li>ทำนายว่าลูกค้าจะซื้อสินค้าหรือไม่ (จากพฤติกรรม)</li>
+      <li>วินิจฉัยโรคจากผลตรวจ (เป็นโรค / ไม่เป็น)</li>
+      <li>พยากรณ์โอกาสที่ผู้กู้จะชำระหนี้คืน</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Logistic Regression</footer>
+
+<script>
+const cv = document.getElementById('demo');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const PAD = 50;
+
+let pts = [];
+let w1=0, w2=0, b=0, epoch=0;
+let training = false;
+
+function randomData(n=26){
+  pts = [];
+  const cx1 = W*0.3, cy1 = H*0.35;
+  const cx0 = W*0.68, cy0 = H*0.68;
+  for(let i=0;i<n;i++){
+    if(Math.random()<0.5) pts.push({x:cx1+(Math.random()*150-75), y:cy1+(Math.random()*150-75), c:1});
+    else pts.push({x:cx0+(Math.random()*150-75), y:cy0+(Math.random()*150-75), c:0});
+  }
+  w1=0; w2=0; b=0; epoch=0;
+  update();
+}
+
+function normalize(p){ return {x:(p.x-W/2)/200, y:(p.y-H/2)/200}; }
+
+function sigmoid(z){ return 1/(1+Math.exp(-z)); }
+
+function loss(){
+  let L=0;
+  for(const p of pts){
+    const n = normalize(p);
+    const z = w1*n.x + w2*n.y + b;
+    const yh = sigmoid(z);
+    L += -p.c*Math.log(yh+1e-9) - (1-p.c)*Math.log(1-yh+1e-9);
+  }
+  return (L/pts.length).toFixed(4);
+}
+
+function accuracy(){
+  if(!pts.length) return '—';
+  let ok=0;
+  for(const p of pts){
+    const n = normalize(p);
+    const pred = sigmoid(w1*n.x + w2*n.y + b) >= 0.5 ? 1 : 0;
+    if(pred===p.c) ok++;
+  }
+  return (ok/pts.length*100).toFixed(1)+'%';
+}
+
+function trainStep(){
+  if(!pts.length) return;
+  const lr = 0.1;
+  let g1=0,g2=0,gb=0;
+  for(const p of pts){
+    const n = normalize(p);
+    const z = w1*n.x + w2*n.y + b;
+    const err = sigmoid(z) - p.c;
+    g1 += err*n.x; g2 += err*n.y; gb += err;
+  }
+  const m = pts.length;
+  w1 -= lr*g1/m; w2 -= lr*g2/m; b -= lr*gb/m;
+  epoch++;
+  update();
+}
+
+function update(){
+  draw();
+  document.getElementById('ep').textContent = epoch;
+  document.getElementById('loss').textContent = pts.length ? loss() : '—';
+  document.getElementById('acc').textContent = accuracy();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath(); ctx.moveTo(i,PAD); ctx.lineTo(i,H-PAD); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD,i); ctx.lineTo(W-PAD,i); ctx.stroke();
+  }
+  // decision boundary
+  if(w1!==0 || w2!==0 || b!==0){
+    // z = 0 line
+    const yOf = x => H/2 + 200*(-(w1*((x-W/2)/200)+b)/w2);
+    ctx.strokeStyle = '#f97316'; ctx.lineWidth = 3;
+    ctx.setLineDash([8,6]);
+    ctx.beginPath();
+    ctx.moveTo(PAD, yOf(PAD)); ctx.lineTo(W-PAD, yOf(W-PAD)); ctx.stroke();
+    ctx.setLineDash([]);
+    // soft probability band
+    const g = ctx.createLinearGradient(0,H,0,0);
+    g.addColorStop(0,'rgba(249,115,22,.08)');
+    g.addColorStop(1,'rgba(59,130,246,.08)');
+    ctx.fillStyle = g;
+    ctx.fillRect(PAD, PAD, W-2*PAD, H-2*PAD);
+  }
+  for(const p of pts){
+    ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI*2);
+    ctx.fillStyle = p.c===1 ? '#fb923c' : '#60a5fa';
+    ctx.fill();
+    ctx.strokeStyle = p.c===1 ? '#9a3412' : '#1e40af'; ctx.lineWidth = 2; ctx.stroke();
+  }
+}
+
+// interactions
+let curClass = 1;
+document.getElementById('classSel').onchange = e=>{ curClass = +e.target.value; };
+
+cv.addEventListener('mousedown', e=>{
+  const rect = cv.getBoundingClientRect();
+  pts.push({x:(e.clientX-rect.left)*(W/rect.width), y:(e.clientY-rect.top)*(H/rect.height), c:curClass});
+  update();
+});
+
+document.getElementById('trainBtn').onclick = ()=>{
+  if(training){ training=false; document.getElementById('trainBtn').textContent='🏋️ ฝึกโมเดล (Gradient Descent)'; return; }
+  training=true;
+  document.getElementById('trainBtn').textContent='⏸ หยุด';
+  const iv = setInterval(()=>{
+    if(!training){ clearInterval(iv); return; }
+    trainStep();
+    if(epoch>=600){ training=false; clearInterval(iv); document.getElementById('trainBtn').textContent='🏋️ ฝึกโมเดล (Gradient Descent)'; }
+  }, 30);
+};
+document.getElementById('stepBtn').onclick = ()=>trainStep();
+document.getElementById('resetBtn').onclick = ()=>randomData();
+document.getElementById('clearBtn').onclick = ()=>{ pts=[]; w1=0;w2=0;b=0;epoch=0; update(); };
+
+randomData();
+</script>
+</body>
+</html>

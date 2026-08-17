@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Means Clustering — Unsupervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#164e63,#0891b2);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #06b6d4;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block;cursor:crosshair;touch-action:none}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#0891b2;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#0e7490}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#22d3ee}
+  input[type=range]{width:180px;accent-color:#06b6d4}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#67e8f9;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">UNSUPERVISED LEARNING · CLUSTERING</div>
+  <h1>K-Means Clustering</h1>
+  <p class="sub">K-มีนส์ — จัดกลุ่มข้อมูลที่ไม่มีป้ายกำกับออกเป็น k กลุ่ม โดยให้จุดในกลุ่มเดียวกันอยู่ใกล้ centroid กันมากที่สุด</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">คลิกเพื่อเพิ่มจุดข้อมูล (ไม่มี label!) แล้วกด "เริ่ม" เพื่อดู K-Means จัดกลุ่มแบบทีละขั้นตอน</p>
+    <canvas id="demo" width="880" height="440"></canvas>
+    <div class="controls">
+      <label style="font-size:14px">k (จำนวนกลุ่ม) = <b id="kVal">3</b>
+        <input type="range" id="kSlider" min="2" max="7" value="3">
+      </label>
+      <button id="runBtn">▶ เริ่ม K-Means</button>
+      <button id="stepBtn" class="secondary">👣 1 ขั้นตอน</button>
+      <button id="clearBtn" class="secondary">🗑 ล้างจุด</button>
+      <button id="sampleBtn" class="secondary">🎲 ข้อมูลตัวอย่าง</button>
+    </div>
+    <div class="stats">
+      <div class="stat">ขั้นตอนที่: <b id="iter">0</b></div>
+      <div class="stat">SSE (ผลรวมระยะ²): <b id="sse">—</b></div>
+      <div class="stat">สถานะ: <b id="status">รอเริ่ม</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">SSE = Σ<sub>i</sub> Σ<sub>x∈Cᵢ</sub> ‖x − μᵢ‖²&nbsp;&nbsp;&nbsp;(หาค่าที่น้อยที่สุด)</div>
+    <ol>
+      <li><b>Initialize:</b> สุ่มตำแหน่ง centroid เริ่มต้น k จุด</li>
+      <li><b>Assign (E-step):</b> จับคู่ทุกจุดเข้ากลุ่มของ centroid ที่อยู่ใกล้ที่สุด</li>
+      <li><b>Update (M-step):</b> ย้าย centroid ไปที่จุดศูนย์กลาง (ค่าเฉลี่ย) ของสมาชิกในกลุ่ม</li>
+      <li>ทำซ้ำขั้น 2–3 จน centroid ไม่ขยับแล้ว (converge)</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">ผลลัพธ์ขึ้นกับตำแหน่งเริ่มต้น และต้องเลือก <b>k</b> ล่วงหน้า — ลองเปลี่ยน k แล้วดูว่า clustering เปลี่ยนไปยังไงครับ</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>เร็วมาก เหมาะกับข้อมูลขนาดใหญ่</li>
+        <li>ง่ายต่อการเข้าใจและ implement</li>
+        <li>ได้ผลดีกับกลุ่มที่มีรูปร่างกลมและขนาดใกล้เคียงกัน</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องระบุ k ล่วงหน้า (ผิดพลาดง่าย)</li>
+        <li>ไวต่อตำแหน่ง centroid เริ่มต้นและ outlier</li>
+        <li>จับกลุ่มรูปทรงแปลก ๆ ไม่ได้ (เช่น รูปจันทร์เสี้ยว)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>แบ่งกลุ่มลูกค้า (customer segmentation) เพื่อการตลาด</li>
+      <li>บีบอัดภาพ: แทนสีล้านสีด้วย k สีหลัก</li>
+      <li>ตรวจจับความผิดปกติ: จุดที่อยู่ไกลจากทุก centroid</li>
+      <li>จัดกลุ่มเอกสาร / ข่าวสารที่มีเนื้อหาคล้ายกัน</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · K-Means</footer>
+
+<script>
+const cv = document.getElementById('demo');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const PAD = 30;
+const COLORS = ['#22d3ee','#a78bfa','#f472b6','#facc15','#34d399','#fb923c','#93c5fd'];
+
+let pts = [];
+let centroids = [];
+let assign = [];          // centroid index per point
+let k = 3, iter = 0, running = false, timer = null;
+
+function sample(){
+  pts = [];
+  for(let g=0; g<3; g++){
+    const cx = W*(0.2+0.3*g) + (Math.random()*40-20);
+    const cy = H*(0.3+0.25*(g%2)) + (Math.random()*40-20);
+    for(let i=0;i<14;i++) pts.push({x:cx+(Math.random()*120-60), y:cy+(Math.random()*120-60)});
+  }
+  reset();
+}
+
+function reset(){
+  centroids = []; assign = []; iter = 0;
+  setStatus('รอเริ่ม');
+  draw();
+}
+
+function initCentroids(){
+  centroids = [];
+  for(let i=0;i<k;i++){
+    centroids.push({x: PAD+Math.random()*(W-2*PAD), y: PAD+Math.random()*(H-2*PAD)});
+  }
+}
+
+function assignStep(){
+  let changed = false;
+  for(let i=0;i<pts.length;i++){
+    let best=0, bd=Infinity;
+    for(let c=0;c<centroids.length;c++){
+      const d = Math.hypot(pts[i].x-centroids[c].x, pts[i].y-centroids[c].y);
+      if(d<bd){ bd=d; best=c; }
+    }
+    if(assign[i]!==best){ assign[i]=best; changed=true; }
+  }
+  return changed;
+}
+
+function updateStep(){
+  const sums = centroids.map(()=>({x:0,y:0,n:0}));
+  for(let i=0;i<pts.length;i++){
+    sums[assign[i]].x += pts[i].x;
+    sums[assign[i]].y += pts[i].y;
+    sums[assign[i]].n++;
+  }
+  let moved = false;
+  for(let c=0;c<centroids.length;c++){
+    if(sums[c].n===0){ centroids[c] = {x:PAD+Math.random()*(W-2*PAD), y:PAD+Math.random()*(H-2*PAD)}; moved=true; continue; }
+    const nx = sums[c].x/sums[c].n, ny = sums[c].y/sums[c].n;
+    if(Math.hypot(nx-centroids[c].x, ny-centroids[c].y) > 1){ moved=true; }
+    centroids[c] = {x:nx, y:ny};
+  }
+  return moved;
+}
+
+function sse(){
+  let s=0;
+  for(let i=0;i<pts.length;i++){
+    const c = assign[i] ?? 0;
+    s += Math.hypot(pts[i].x-centroids[c].x, pts[i].y-centroids[c].y)**2;
+  }
+  return s;
+}
+
+function step(){
+  if(!pts.length || !centroids.length) return;
+  assignStep();
+  updateStep();
+  iter++;
+  draw();
+}
+
+function setStatus(s){ document.getElementById('status').textContent = s; }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#1e293b';
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath();ctx.moveTo(i,PAD);ctx.lineTo(i,H-PAD);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PAD,i);ctx.lineTo(W-PAD,i);ctx.stroke();
+  }
+  // lines point->centroid
+  if(centroids.length){
+    for(let i=0;i<pts.length;i++){
+      const c = assign[i] ?? 0;
+      ctx.strokeStyle = COLORS[c]+'44'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(centroids[c].x, centroids[c].y); ctx.stroke();
+    }
+  }
+  for(let i=0;i<pts.length;i++){
+    ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, 6, 0, Math.PI*2);
+    ctx.fillStyle = centroids.length ? COLORS[assign[i] ?? 0] : '#94a3b8';
+    ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.stroke();
+  }
+  for(let c=0;c<centroids.length;c++){
+    const p = centroids[c];
+    ctx.beginPath(); ctx.arc(p.x, p.y, 13, 0, Math.PI*2);
+    ctx.fillStyle = COLORS[c]; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p.x-18,p.y); ctx.lineTo(p.x+18,p.y);
+    ctx.moveTo(p.x,p.y-18); ctx.lineTo(p.x,p.y+18);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+  }
+  document.getElementById('iter').textContent = iter;
+  document.getElementById('sse').textContent = centroids.length && pts.length ? sse().toFixed(0) : '—';
+}
+
+// events
+cv.addEventListener('click', e=>{
+  const rect = cv.getBoundingClientRect();
+  pts.push({x:(e.clientX-rect.left)*(W/rect.width), y:(e.clientY-rect.top)*(H/rect.height)});
+  draw();
+});
+document.getElementById('kSlider').oninput = e=>{
+  k = +e.target.value;
+  document.getElementById('kVal').textContent = k;
+  reset();
+};
+document.getElementById('runBtn').onclick = ()=>{
+  if(running){ running=false; clearInterval(timer); document.getElementById('runBtn').textContent='▶ เริ่ม K-Means'; return; }
+  if(!pts.length) return;
+  if(!centroids.length){ initCentroids(); }
+  running=true;
+  document.getElementById('runBtn').textContent='⏸ หยุด';
+  setStatus('กำลังทำงาน...');
+  timer = setInterval(()=>{
+    if(!running){ clearInterval(timer); return; }
+    const moved = assignStep(); updateStep();
+    iter++; draw();
+    if(!moved){
+      running=false; clearInterval(timer);
+      document.getElementById('runBtn').textContent='▶ เริ่ม K-Means';
+      setStatus('✅ ครบวงจรแล้ว (converged)');
+    }
+  }, 120);
+};
+document.getElementById('stepBtn').onclick = ()=>{
+  if(!centroids.length) initCentroids();
+  step();
+};
+document.getElementById('clearBtn').onclick = ()=>{ pts=[]; reset(); };
+document.getElementById('sampleBtn').onclick = sample;
+
+sample();
+</script>
+</body>
+</html>

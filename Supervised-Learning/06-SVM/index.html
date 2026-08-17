@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVM — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#3b0764,#9333ea);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #a855f7;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#9333ea;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#7e22ce}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#c084fc}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#d8b4fe;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · CLASSIFICATION</div>
+  <h1>Support Vector Machine (SVM)</h1>
+  <p class="sub">เครื่องเวกเตอร์สนับสนุน — หาเส้นแบ่งที่ดีที่สุด โดยให้ระยะห่าง (margin) ระหว่างสอง class กว้างที่สุดเท่าที่จะทำได้</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">กด "ฝึก SVM" เพื่อหาเส้นแบ่งพร้อมขอบ margin ที่กว้างที่สุด — จุดที่ขีดวงไว้คือ <b>Support Vectors</b> ที่กำหนดตำแหน่งของเส้น</p>
+    <canvas id="demo" width="880" height="440"></canvas>
+    <div class="controls">
+      <button id="trainBtn">🎯 ฝึก SVM (Max-Margin)</button>
+      <button id="resetBtn" class="secondary">🎲 ข้อมูลใหม่</button>
+    </div>
+    <div class="stats">
+      <div class="stat">Margin width: <b id="mw">—</b></div>
+      <div class="stat">จำนวน Support Vectors: <b id="nsv">—</b></div>
+      <div class="stat">Accuracy: <b id="acc">—</b></div>
+      <div class="stat">Hinge Loss: <b id="hinge">—</b></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">minimize&nbsp; ½‖w‖² + C·Σ max(0, 1 − yᵢ(w·xᵢ + b))&nbsp;&nbsp;&nbsp;(Hinge Loss)</div>
+    <ol>
+      <li>หาเส้นแบ่ง <b>w·x + b = 0</b> ที่แยกสอง class ออกจากกัน</li>
+      <li>ไม่ใช่แค่แยกได้ — ต้องแยกให้ <b>margin (ระยะถึงจุดที่ใกล้ที่สุด)</b> กว้างที่สุดด้วย</li>
+      <li>จุดข้อมูลที่อยู่บนขอบ margin พอดีเรียกว่า <b>Support Vectors</b> — มีแค่จุดเหล่านี้เท่านั้นที่กำหนดเส้นแบ่ง</li>
+      <li>ถ้าข้อมูลไม่ separable ใช้ค่า <b>C</b> ควบคุมการยอมให้ผิดบ้าง (soft margin)</li>
+    </ol>
+    <p class="lead" style="margin-top:12px"><b>Kernel trick:</b> ถ้าข้อมูลไม่แยกด้วยเส้นตรง ให้ "ย้าย" ข้อมูลไปมิติที่สูงขึ้น (เช่น RBF kernel) แล้วหาเส้นแบ่งในมิตินั้น — ทำให้ SVM จับรูปทรงโค้งได้โดยไม่ต้องคำนวณมิติสูงจริง ๆ</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำสูงโดยเฉพาะข้อมูลมิติสูง (เช่น ภาพ)</li>
+        <li>ใช้หน่วยความจำน้อย — จำแค่ support vectors ไม่ใช่ทุกจุด</li>
+        <li>Kernel trick ทำให้จับความสัมพันธ์ซับซ้อนได้</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ไม่เหมาะกับข้อมูลขนาดใหญ่ (ฝึกช้า)</li>
+        <li>ต้องปรับพารามิเตอร์ (C, kernel, gamma) หลายตัว</li>
+        <li>ผลลัพธ์ตีความยาก และอ่อนไหวต่อการเลือก kernel</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>จำแนกใบหน้าและการจดจำลายมือ</li>
+      <li>จำแนกประเภทข้อความและอารมณ์ (sentiment)</li>
+      <li>ตรวจหาเซลล์ผิดปกติในภาพทางการแพทย์</li>
+      <li>จัดหมวดหมู่ยีนในงานชีวสารสนเทศ</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Support Vector Machine</footer>
+
+<script>
+const cv = document.getElementById('demo');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const PAD = 40;
+
+let pts = [];
+let w={x:0,y:0}, b=0, trained=false;
+
+function randomData(n=24){
+  pts = [];
+  // separable with slight overlap
+  for(let i=0;i<n;i++){
+    const c = Math.random()<0.5 ? 1 : -1;   // class: +1 / -1
+    const x = W*0.5 + (c>0? -1 : 1)*(W*0.12) + (Math.random()*120-60);
+    const y = H*0.5 + (c>0? 1 : -1)*(H*0.10) + (Math.random()*140-70);
+    pts.push({x, y, c});
+  }
+  w={x:0,y:0}; b=0; trained=false;
+  draw();
+}
+
+// train SVM via subgradient descent on hinge loss
+function train(epochs=800, lr=0.05){
+  for(let e=0;e<epochs;e++){
+    let gx=0, gy=0, gb=0;
+    for(const p of pts){
+      const nx=(p.x-W/2)/160, ny=(p.y-H/2)/160;
+      const z = p.c*(w.x*nx + w.y*ny + b);
+      if(z < 1){
+        gx -= p.c*nx; gy -= p.c*ny; gb -= p.c;
+      }
+    }
+    const m = pts.length;
+    w.x = w.x - lr*(w.x/1000 + gx/m);   // small regularization
+    w.y = w.y - lr*(w.y/1000 + gy/m);
+    b   = b   - lr*gb/m;
+  }
+  trained = true;
+}
+
+function yOf(x){
+  return H/2 + 160*(-(w.x*((x-W/2)/160) + b)/w.y);
+}
+function distTo(p){
+  const nx=(p.x-W/2)/160, ny=(p.y-H/2)/160;
+  return (w.x*nx + w.y*ny + b) / Math.hypot(w.x/160, w.y/160) * 160;
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#1e293b';
+  for(let i=PAD;i<=W-PAD;i+=40){
+    ctx.beginPath();ctx.moveTo(i,PAD);ctx.lineTo(i,H-PAD);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PAD,i);ctx.lineTo(W-PAD,i);ctx.stroke();
+  }
+  let svs=[], marginW=0, hinge=0;
+  if(trained && w.y!==0){
+    // margin lines
+    const norm = Math.hypot(w.x,w.y);
+    const off = 160/norm;
+    const yTop = x => yOf(x) - off*Math.sign(w.y)*160/160*0; // keep simple: offset along normal
+    // compute margin offset in px along normal direction
+    const dx = w.x/norm, dy = w.y/norm;   // unit normal (in normalized space)
+    const pxOff = 160;                    // margin = 1 in normalized units => 160 px
+    const yM1 = x => {
+      // line w·x+b=1: point on line at x
+      const nx=(x-W/2)/160;
+      const ny1 = (1 - b - w.x*nx)/w.y;
+      return H/2 + ny1*160;
+    };
+    const yM0 = x => {
+      const nx=(x-W/2)/160;
+      const ny0 = (-1 - b - w.x*nx)/w.y;
+      return H/2 + ny0*160;
+    };
+    // decision
+    ctx.strokeStyle='#a855f7'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(PAD,yOf(PAD)); ctx.lineTo(W-PAD,yOf(W-PAD)); ctx.stroke();
+    // margins
+    ctx.strokeStyle='rgba(168,85,247,.45)'; ctx.lineWidth=2; ctx.setLineDash([7,6]);
+    ctx.beginPath(); ctx.moveTo(PAD,yM1(PAD)); ctx.lineTo(W-PAD,yM1(W-PAD)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD,yM0(PAD)); ctx.lineTo(W-PAD,yM0(W-PAD)); ctx.stroke();
+    ctx.setLineDash([]);
+    // fill margin band
+    ctx.fillStyle='rgba(168,85,247,.07)';
+    ctx.beginPath();
+    ctx.moveTo(PAD,yM1(PAD)); ctx.lineTo(W-PAD,yM1(W-PAD));
+    ctx.lineTo(W-PAD,yM0(W-PAD)); ctx.lineTo(PAD,yM0(PAD));
+    ctx.closePath(); ctx.fill();
+    marginW = 2*160/Math.hypot(w.x,w.y);
+    // support vectors: closest points to boundary (one per side)
+    const sorted=[...pts].sort((a,b)=>Math.abs(distTo(a))-Math.abs(distTo(b)));
+    const sv = sorted.filter(p=>Math.abs(distTo(p)) < marginW/2*1.02 + 12);
+    svs = sv;
+    for(const p of sv){
+      ctx.beginPath(); ctx.arc(p.x,p.y,11,0,Math.PI*2);
+      ctx.strokeStyle='#facc15'; ctx.lineWidth=2.5; ctx.stroke();
+    }
+    // hinge loss
+    for(const p of pts){
+      const nx=(p.x-W/2)/160, ny=(p.y-H/2)/160;
+      hinge += Math.max(0, 1 - p.c*(w.x*nx+w.y*ny+b));
+    }
+    hinge = (hinge/pts.length).toFixed(3);
+  }
+  for(const p of pts){
+    ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2);
+    ctx.fillStyle = p.c===1 ? '#60a5fa' : '#fb923c';
+    ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=2; ctx.stroke();
+  }
+  // stats
+  document.getElementById('mw').textContent = trained ? marginW.toFixed(1)+' px' : '—';
+  document.getElementById('nsv').textContent = trained ? svs.length : '—';
+  document.getElementById('hinge').textContent = trained ? hinge : '—';
+  let ok=0;
+  for(const p of pts){
+    const nx=(p.x-W/2)/160, ny=(p.y-H/2)/160;
+    const pred = Math.sign(w.x*nx+w.y*ny+b);
+    if(trained && pred===p.c) ok++;
+  }
+  document.getElementById('acc').textContent = trained ? (ok/pts.length*100).toFixed(1)+'%' : '—';
+}
+
+document.getElementById('trainBtn').onclick = ()=>{ train(); draw(); };
+document.getElementById('resetBtn').onclick = ()=>randomData();
+
+randomData();
+</script>
+</body>
+</html>

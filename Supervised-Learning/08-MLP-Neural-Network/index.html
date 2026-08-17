@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLP (Neural Network) — Supervised Learning</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
+  header{background:linear-gradient(135deg,#1e1b4b,#db2777);padding:56px 24px;text-align:center}
+  .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  h1{font-size:42px;margin-top:12px}
+  .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
+  main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  section{margin-bottom:48px}
+  h2{font-size:24px;margin-bottom:16px;border-left:4px solid #ec4899;padding-left:12px}
+  p.lead{opacity:.85;max-width:760px}
+  canvas{width:100%;background:#0b1220;border:1px solid #1e293b;border-radius:12px;display:block}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:800px){.two{grid-template-columns:1fr}}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  button{background:#db2777;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  button:hover{background:#be185d}
+  button.secondary{background:#334155}
+  button.secondary:hover{background:#475569}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:#1e293b;padding:10px 16px;border-radius:8px;font-size:14px}
+  .stat b{color:#f472b6}
+  ol,ul{margin-left:22px}
+  li{margin-bottom:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{background:#1e293b;padding:20px;border-radius:12px}
+  .card h3{margin-bottom:10px;font-size:18px}
+  .pros h3{color:#34d399}.cons h3{color:#f87171}
+  .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#f9a8d4;margin:14px 0;overflow-x:auto}
+  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .hint{font-size:13px;opacity:.6;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">SUPERVISED LEARNING · DEEP LEARNING</div>
+  <h1>MLP — Multi-Layer Perceptron</h1>
+  <p class="sub">โครงข่ายประสาทเทียมแบบหลายชั้น — ต่อเซลล์ประสาท (perceptron) หลายชั้นซ้อนกัน เรียนรู้ฟังก์ชันซับซ้อนอย่าง XOR ที่เส้นตรงทำไม่ได้</p>
+</header>
+<main>
+  <section>
+    <h2>🎯 ลองเล่น</h2>
+    <p class="lead">MLP กำลังเรียนรู้ปัญหา <b>XOR</b> (จุดสีเดียวกัน = class เดียวกัน) — ดูเส้นแบ่งโค้ง ๆ เกิดขึ้นจาก 4-2-1 โครงข่าย และกราฟ loss ลดลงเรื่อย ๆ</p>
+    <div class="two">
+      <div>
+        <canvas id="demo" width="520" height="440"></canvas>
+        <div class="stats">
+          <div class="stat">Epoch: <b id="ep">0</b></div>
+          <div class="stat">Loss: <b id="loss">—</b></div>
+          <div class="stat">Accuracy: <b id="acc">—</b></div>
+        </div>
+      </div>
+      <div>
+        <canvas id="net" width="520" height="440"></canvas>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="trainBtn">🚀 เริ่มฝึก (Backpropagation)</button>
+      <button id="resetBtn" class="secondary">🔄 รีเซ็ตน้ำหนัก</button>
+      <span class="hint">💡 สีของเส้นเชื่อม = น้ำหนัก (+ แดง / − น้ำเงิน) ความเข้ม = ขนาด</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">h = ReLU(W₁x + b₁)&nbsp;&nbsp;&nbsp;ŷ = σ(W₂h + b₂)</div>
+    <ol>
+      <li><b>Forward pass:</b> ข้อมูลไหลจาก input layer → hidden layers → output layer โดยแต่ละเซลล์คำนวณ <b>ผลรวมถ่วงน้ำหนัก + activation function</b></li>
+      <li><b>Activation:</b> ReLU, Sigmoid, Tanh — เพิ่มความ "ไม่เป็นเส้นตรง" ให้โครงข่ายเรียนรู้รูปทรงซับซ้อนได้</li>
+      <li><b>Loss:</b> เปรียบเทียบคำตอบที่ทำนายกับคำตอบจริง (เช่น Cross-Entropy)</li>
+      <li><b>Backpropagation:</b> คำนวณว่าการเปลี่ยนน้ำหนักแต่ละตัวทำให้ loss เพิ่ม/ลดแค่ไหน (gradient) แล้วปรับน้ำหนักให้ loss ลดลง (Gradient Descent)</li>
+      <li>ทำซ้ำหลายพันรอบจน loss ต่ำ — น้ำหนักที่ได้คือ "ความรู้" ของโมเดล</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>Universal approximator — เรียนรู้ฟังก์ชันใดก็ได้ถ้ามีชั้นเพียงพอ</li>
+        <li>ใช้กับได้ทุกอย่าง: ตัวเลข, ภาพ, ข้อความ, เสียง</li>
+        <li>เป็นพื้นฐานของ deep learning ทั้งหมด</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องใช้ข้อมูลจำนวนมากและพลังคำนวณสูง</li>
+        <li>เป็น "กล่องดำ" — อธิบายว่าทำไมถึงตัดสินใจแบบนั้นยาก</li>
+        <li>ต้องปรับ hyperparameter หลายตัว (layer, neuron, learning rate)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>💼 การใช้งานจริง</h2>
+    <ul>
+      <li>พยากรณ์ราคาหุ้นและอนุกรมเวลา</li>
+      <li>จดจำภาพและเสียงพูด</li>
+      <li>ระบบแนะนำสินค้าขนาดใหญ่</li>
+      <li>เป็นส่วนประกอบในโมเดล Transformer, CNN, LSTM ทั้งหมด</li>
+    </ul>
+  </section>
+</main>
+<footer>Machine Learning Visualization · Multi-Layer Perceptron</footer>
+
+<script>
+// --- MLP: 2 inputs -> 2 hidden (ReLU) -> 1 output (sigmoid) ---
+let W1=[[0,0],[0,0]], b1=[0,0], W2=[0,0], b2=0;
+let epoch=0, running=false, timer=null;
+
+function initWeights(){
+  const r = ()=>Math.random()*2-1;
+  W1=[[r(),r()],[r(),r()]];
+  b1=[r(),r()];
+  W2=[r(),r()];
+  b2=r();
+  epoch=0;
+}
+
+// XOR training data (normalized 0..1)
+const data = [
+  {x:[0,0], y:0},{x:[0,1], y:1},{x:[1,0], y:1},{x:[1,1], y:0}
+];
+const PAD=30;
+const dw = (520-2*PAD), dh = (440-2*PAD);
+
+function forward(x){
+  const h0 = Math.max(0, W1[0][0]*x[0]+W1[0][1]*x[1]+b1[0]);
+  const h1 = Math.max(0, W1[1][0]*x[0]+W1[1][1]*x[1]+b1[1]);
+  const out = 1/(1+Math.exp(-(W2[0]*h0+W2[1]*h1+b2)));
+  return {h0,h1,out};
+}
+
+function trainStep(lr=0.5){
+  let dW1=[[0,0],[0,0]], db1=[0,0], dW2=[0,0], db2=0;
+  for(const d of data){
+    const f = forward(d.x);
+    const err = f.out - d.y;
+    const dOut = err * f.out*(1-f.out);
+    db2 += dOut;
+    dW2[0] += dOut*f.h0;
+    dW2[1] += dOut*f.h1;
+    const dh0 = dOut*W2[0]*(f.h0>0?1:0);
+    const dh1 = dOut*W2[1]*(f.h1>0?1:0);
+    db1[0]+=dh0; db1[1]+=dh1;
+    dW1[0][0]+=dh0*d.x[0]; dW1[0][1]+=dh0*d.x[1];
+    dW1[1][0]+=dh1*d.x[0]; dW1[1][1]+=dh1*d.x[1];
+  }
+  const n=data.length;
+  for(let i=0;i<2;i++){
+    for(let j=0;j<2;j++) W1[i][j]-=lr*dW1[i][j]/n;
+    b1[i]-=lr*db1[i]/n;
+    W2[i]-=lr*dW2[i]/n;
+  }
+  b2-=lr*db2/n;
+  epoch++;
+}
+
+function loss(){
+  let L=0;
+  for(const d of data){
+    const f=forward(d.x);
+    L += -d.y*Math.log(f.out+1e-9)-(1-d.y)*Math.log(1-f.out+1e-9);
+  }
+  return (L/data.length).toFixed(4);
+}
+function acc(){
+  let ok=0;
+  for(const d of data){
+    if((forward(d.x).out>=0.5?1:0)===d.y) ok++;
+  }
+  return (ok/4*100).toFixed(0)+'%';
+}
+
+const cv=document.getElementById('demo'), ctx=cv.getContext('2d');
+const nv=document.getElementById('net'), nctx=nv.getContext('2d');
+
+function draw(){
+  // decision surface
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,cv.width,cv.height);
+  const step=8;
+  for(let py=PAD;py<cv.height-PAD;py+=step){
+    for(let px=PAD;px<cv.width-PAD;px+=step){
+      const x0=(px-PAD)/dw, x1=(py-PAD)/dh;
+      const o=forward([x0,x1]).out;
+      ctx.fillStyle = `rgba(${Math.round(236+ (59-236)*o)},${Math.round(72+ (130-72)*o)},${Math.round(153+ (246-153)*o)},.75)`;
+      ctx.fillRect(px,py,step,step);
+    }
+  }
+  // XOR points: x0=0 left, x0=1 right; y: 0 top, 1 bottom
+  const px = x => PAD + x*dw, py = y => PAD + y*dh;
+  const pts = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
+  for(const [x,y,c] of pts){
+    ctx.beginPath(); ctx.arc(px(x),py(y),13,0,Math.PI*2);
+    ctx.fillStyle = c===1 ? '#f9a8d4' : '#818cf8';
+    ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.fillStyle='#0f172a'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`${x},${y}`, px(x), py(y)+1);
+  }
+  document.getElementById('ep').textContent=epoch;
+  document.getElementById('loss').textContent=loss();
+  document.getElementById('acc').textContent=acc();
+  drawNet();
+}
+
+function drawNet(){
+  nctx.clearRect(0,0,nv.width,nv.height);
+  nctx.fillStyle='#0b1220'; nctx.fillRect(0,0,nv.width,nv.height);
+  const L = [[{l:100,y:150,label:'x₁'},{l:100,y:290,label:'x₂'}],
+             [{l:260,y:110,label:'h₁'},{l:260,y:220,label:'h₂'}],
+             [{l:420,y:220,label:'ŷ'}]];
+  // edges
+  for(const w of [[W1[0],0],[W1[1],1]]){
+    for(let j=0;j<2;j++){
+      const a=L[0][j], b=L[1][w[1]];
+      const val = w[0][j];
+      nctx.strokeStyle = val>0 ? `rgba(248,113,113,${Math.min(1,Math.abs(val))})` : `rgba(96,165,250,${Math.min(1,Math.abs(val))})`;
+      nctx.lineWidth = 1+Math.abs(val)*2.5;
+      nctx.beginPath(); nctx.moveTo(a.l+30,a.y); nctx.lineTo(b.l-30,b.y); nctx.stroke();
+    }
+  }
+  for(let j=0;j<2;j++){
+    const a=L[1][j], b=L[2][0];
+    const val=W2[j];
+    nctx.strokeStyle = val>0 ? `rgba(248,113,113,${Math.min(1,Math.abs(val))})` : `rgba(96,165,250,${Math.min(1,Math.abs(val))})`;
+    nctx.lineWidth = 1+Math.abs(val)*2.5;
+    nctx.beginPath(); nctx.moveTo(a.l+30,a.y); nctx.lineTo(b.l-30,b.y); nctx.stroke();
+  }
+  // nodes
+  for(const layer of L){
+    for(const n of layer){
+      nctx.beginPath(); nctx.arc(n.l, n.y, 26, 0, Math.PI*2);
+      nctx.fillStyle='#1e293b'; nctx.fill();
+      nctx.strokeStyle='#64748b'; nctx.lineWidth=2; nctx.stroke();
+      nctx.fillStyle='#e2e8f0'; nctx.font='13px sans-serif'; nctx.textAlign='center'; nctx.textBaseline='middle';
+      nctx.fillText(n.label, n.l, n.y);
+    }
+  }
+  nctx.fillStyle='#64748b'; nctx.font='11px sans-serif'; nctx.textAlign='center';
+  nctx.fillText('Input (2)', 100, 360);
+  nctx.fillText('Hidden (2, ReLU)', 260, 360);
+  nctx.fillText('Output (1, Sigmoid)', 420, 360);
+}
+
+document.getElementById('trainBtn').onclick = ()=>{
+  if(running){ running=false; clearInterval(timer); document.getElementById('trainBtn').textContent='🚀 เริ่มฝึก (Backpropagation)'; return; }
+  running=true;
+  document.getElementById('trainBtn').textContent='⏸ หยุด';
+  timer = setInterval(()=>{
+    if(!running){ clearInterval(timer); return; }
+    for(let i=0;i<10;i++) trainStep();
+    draw();
+    if(epoch>=2000){ running=false; clearInterval(timer); document.getElementById('trainBtn').textContent='🚀 เริ่มฝึก (Backpropagation)'; }
+  }, 40);
+};
+document.getElementById('resetBtn').onclick = ()=>{ initWeights(); draw(); };
+
+initWeights();
+draw();
+</script>
+</body>
+</html>
