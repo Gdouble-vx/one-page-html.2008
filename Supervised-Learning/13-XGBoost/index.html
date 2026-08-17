@@ -40,7 +40,7 @@
   .card h3{margin-bottom:10px;font-size:18px}
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fde68a;margin:14px 0;overflow-x:auto}
-  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  footer{text-align:center;padding:24px;opacity:.7;font-size:13px}
   .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
   .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
   .param-card .pname{font-weight:700;font-size:15px}
@@ -71,7 +71,7 @@
     <p class="lead">กด "เพิ่มต้นไม้" ทีละต้นเพื่อดู Boosting ทำงาน — ต้นไม้ต้นใหม่แก้จุดที่ต้นก่อนหน้าทำผิด ดู loss ลดลงในกราฟขวา</p>
     <div class="two">
       <div>
-        <canvas id="demo" width="520" height="440"></canvas>
+        <canvas id="demo" width="520" height="440" role="img" aria-label="กราฟ XGBoost — ดู decision region ที่ต้นไม้เรียนรู้ residual"></canvas>
         <div class="stats">
           <div class="stat">จำนวนต้นไม้: <b id="nT">0</b></div>
           <div class="stat">Loss (LogLoss): <b id="loss">—</b></div>
@@ -79,7 +79,7 @@
         </div>
       </div>
       <div>
-        <canvas id="lossCv" width="520" height="200"></canvas>
+        <canvas id="lossCv" width="520" height="200" role="img" aria-label="กราฟ LogLoss ระหว่างการ boosting"></canvas>
         <div class="treebox" id="trees"></div>
       </div>
     </div>

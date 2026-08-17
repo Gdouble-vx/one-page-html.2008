@@ -35,7 +35,7 @@
   .card h3{margin-bottom:10px;font-size:18px}
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fdba74;margin:14px 0;overflow-x:auto}
-  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  footer{text-align:center;padding:24px;opacity:.7;font-size:13px}
   .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
   .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
   .param-card .pname{font-weight:700;font-size:15px}
@@ -64,7 +64,7 @@
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">คลิกบนกราฟเพื่อเพิ่มจุด (สีส้ม = class 1, สีน้ำเงิน = class 0) แล้วกด "ฝึกโมเดล" เพื่อดูเส้นแบ่งเรียนรู้แบบไล่ทีละขั้น</p>
-    <canvas id="demo" width="880" height="440"></canvas>
+    <canvas id="demo" width="880" height="440" role="img" aria-label="กราฟ Logistic Regression — คลิกเพิ่มจุด 2 คลาส ฝึกโมเดลดูเส้นแบ่งและความน่าจะเป็น"></canvas>
     <div class="controls">
       <button id="trainBtn">🏋️ ฝึกโมเดล (Gradient Descent)</button>
       <button id="stepBtn" class="secondary">👣 ก้าวทีละ 1 ขั้น</button>

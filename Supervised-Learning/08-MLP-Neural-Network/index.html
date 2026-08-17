@@ -37,7 +37,7 @@
   .card h3{margin-bottom:10px;font-size:18px}
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#f9a8d4;margin:14px 0;overflow-x:auto}
-  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  footer{text-align:center;padding:24px;opacity:.7;font-size:13px}
   .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
   .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
   .param-card .pname{font-weight:700;font-size:15px}
@@ -68,7 +68,7 @@
     <p class="lead">MLP กำลังเรียนรู้ปัญหา <b>XOR</b> (จุดสีเดียวกัน = class เดียวกัน) — ดูเส้นแบ่งโค้ง ๆ เกิดขึ้นจาก 4-2-1 โครงข่าย และกราฟ loss ลดลงเรื่อย ๆ</p>
     <div class="two">
       <div>
-        <canvas id="demo" width="520" height="440"></canvas>
+        <canvas id="demo" width="520" height="440" role="img" aria-label="กราฟ Decision Surface ของ MLP — ดูเส้นแบ่ง XOR ที่เรียนรู้"></canvas>
         <div class="stats">
           <div class="stat">Epoch: <b id="ep">0</b></div>
           <div class="stat">Loss: <b id="loss">—</b></div>
@@ -76,7 +76,7 @@
         </div>
       </div>
       <div>
-        <canvas id="net" width="520" height="440"></canvas>
+        <canvas id="net" width="520" height="440" role="img" aria-label="แผนภาพโครงข่ายประสาท 2-2-1 — แสดงน้ำหนักและ activation"></canvas>
       </div>
     </div>
     <div class="controls">
@@ -325,10 +325,17 @@ document.getElementById('trainBtn').onclick = ()=>{
   if(running){ running=false; clearInterval(timer); document.getElementById('trainBtn').textContent='🚀 เริ่มฝึก (Backpropagation)'; return; }
   running=true;
   document.getElementById('trainBtn').textContent='⏸ หยุด';
+  let tick=0;
   timer = setInterval(()=>{
     if(!running){ clearInterval(timer); return; }
     for(let i=0;i<10;i++) trainStep();
-    draw();
+    tick++;
+    if(tick%5===0){ draw(); }   // decision surface ราคาแพง → วาดทุก 5 tick ฝึกจะลื่นขึ้น
+    else {
+      document.getElementById('ep').textContent=epoch;
+      document.getElementById('loss').textContent=loss();
+      document.getElementById('acc').textContent=acc();
+    }
     if(epoch>=2000){ running=false; clearInterval(timer); document.getElementById('trainBtn').textContent='🚀 เริ่มฝึก (Backpropagation)'; }
   }, 40);
 };

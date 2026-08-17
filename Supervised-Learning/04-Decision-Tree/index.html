@@ -39,7 +39,7 @@
   .card h3{margin-bottom:10px;font-size:18px}
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#c7d2fe;margin:14px 0;overflow-x:auto}
-  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  footer{text-align:center;padding:24px;opacity:.7;font-size:13px}
   .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
   .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
   .param-card .pname{font-weight:700;font-size:15px}
@@ -70,7 +70,7 @@
     <p class="lead">กด "เพิ่มความลึก" เพื่อให้ต้นไม้เรียนรู้การแบ่งข้อมูลทีละชั้น — ดูเส้นแบ่งบนกราฟซ้าย และโครงสร้างต้นไม้ทางขวา</p>
     <div class="two">
       <div>
-        <canvas id="demo" width="520" height="440"></canvas>
+        <canvas id="demo" width="520" height="440" role="img" aria-label="กราฟ Decision Tree — ดูเส้นแบ่งและภูมิภาคการตัดสินใจ"></canvas>
       </div>
       <div class="treebox">
         <div id="tree"></div>
@@ -345,7 +345,7 @@ function drawTree(node){
   }
   nodeSvg(node);
   const h = maxDepth(node)*64 + 60;
-  el.innerHTML = `<svg width="480" height="${Math.max(h,120)}" style="background:#0b1220">${s}</svg>`;
+  el.innerHTML = `<svg width="480" height="${Math.max(h,120)}" style="background:#0b1220" role="img" aria-label="โครงสร้างต้นไม้ตัดสินใจ (Decision Tree)">${s}</svg>`;
 }
 
 document.getElementById('growBtn').onclick = ()=>{

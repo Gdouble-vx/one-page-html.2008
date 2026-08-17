@@ -39,7 +39,7 @@
   .card h3{margin-bottom:10px;font-size:18px}
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#86efac;margin:14px 0;overflow-x:auto}
-  footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  footer{text-align:center;padding:24px;opacity:.7;font-size:13px}
   .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
   .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
   .param-card .pname{font-weight:700;font-size:15px}
@@ -68,7 +68,7 @@
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">กด "สร้างป่า" เพื่อฝึก Random Forest จำนวน 60 ต้น — เส้นแบ่งกลายเป็นขอบเขตแบบรวมของหลายต้นที่โหวตกัน</p>
-    <canvas id="demo" width="880" height="440"></canvas>
+    <canvas id="demo" width="880" height="440" role="img" aria-label="กราฟ Random Forest — ดู decision region ที่เกิดจากป่าต้นไม้หลายต้นโหวต"></canvas>
     <div class="controls">
       <button id="forestBtn">🌲 สร้างป่า (60 ต้น)</button>
       <button id="oneBtn" class="secondary">🌳 เพิ่มต้นไม้อีก 1 ต้น</button>
