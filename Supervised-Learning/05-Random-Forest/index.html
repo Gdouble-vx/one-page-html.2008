@@ -43,6 +43,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:220px;accent-color:#15803d}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -105,6 +109,13 @@
   <section>
     <h2>⚙️ Parameter Tuning</h2>
     <p class="lead">Random Forest ทนทานต่อพารามิเตอร์พอสมควร แต่ปรับตัวนี้แล้วได้ผลดี (หน้านี้ใช้ n_estimators=60)</p>
+    <div class="tune-grid">
+      <label class="tune">n_estimators (จำนวนต้น)
+        <input type="range" id="tuneTrees" min="0" max="200" step="1" value="60">
+        <b id="tuneTreesv">60</b>
+      </label>
+    </div>
+    <p class="hint">💡 เลื่อนดู accuracy เพิ่มขึ้นตามจำนวนต้น — สังเกตว่าพอถึงจุดหนึ่งแทบไม่ดีขึ้นแล้ว</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">n_estimators (จำนวนต้น)</div>
@@ -275,6 +286,15 @@ document.getElementById('forestBtn').onclick = ()=>{
 };
 document.getElementById('oneBtn').onclick = ()=>{ addTree(); draw(); };
 document.getElementById('resetBtn').onclick = ()=>randomData();
+
+// --- Parameter Tuning: n_estimators slider ---
+document.getElementById('tuneTrees').oninput = e=>{
+  const target = +e.target.value;
+  document.getElementById('tuneTreesv').textContent = target;
+  while(trees.length < target) addTree();
+  if(trees.length > target) trees.length = target;
+  draw();
+};
 
 randomData();
 </script>

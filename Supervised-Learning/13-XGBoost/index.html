@@ -44,6 +44,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:200px;accent-color:#f59e0b}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -114,6 +118,17 @@
   <section>
     <h2>⚙️ Parameter Tuning</h2>
     <p class="lead">XGBoost มีพารามิเตอร์เยอะ — จับคู่หลักคือ (learning_rate ↔ n_estimators) กับ (max_depth ↔ min_child_weight)</p>
+    <div class="tune-grid">
+      <label class="tune">learning_rate (eta)
+        <input type="range" id="tuneEta" min="0.05" max="1" step="0.05" value="0.35">
+        <b id="tuneEtav">0.35</b>
+      </label>
+      <label class="tune">n_estimators (จำนวนต้น)
+        <input type="range" id="tuneN" min="0" max="100" step="1" value="0">
+        <b id="tuneNv">0</b>
+      </label>
+    </div>
+    <p class="hint">💡 eta เล็ก → ต้องใช้ต้นไม้เยอะขึ้นแต่แม่นกว่า · เลื่อน n_estimators เพื่อสร้าง/ลดต้นไม้แล้วดู loss</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">n_estimators (จำนวนต้น)</div>
@@ -172,6 +187,7 @@ const lv=document.getElementById('lossCv'), lctx=lv.getContext('2d');
 const W=cv.width,H=cv.height,PAD=30;
 
 let pts=[], F=[], trees=[], losses=[];
+let eta=0.35;   // ปรับได้จาก slider ใน Parameter Tuning
 
 function randomData(n=44){
   pts=[];
@@ -218,7 +234,7 @@ function addTree(){
     }
   }
   if(!best) return;
-  const eta=0.35;
+  // eta เป็นตัวแปร global ที่ปรับได้จาก slider ใน Parameter Tuning
   // update F
   for(const i of best.L) F[i]+=eta*best.mL;
   for(const i of best.R) F[i]+=eta*best.mR;
@@ -295,6 +311,28 @@ function draw(){
 document.getElementById('addBtn').onclick=()=>{ addTree(); draw(); };
 document.getElementById('boostBtn').onclick=()=>{ for(let i=0;i<50;i++) addTree(); draw(); };
 document.getElementById('resetBtn').onclick=()=>randomData();
+
+// --- Parameter Tuning sliders ---
+function recomputeF(){
+  F = pts.map(()=>0);
+  for(const t of trees){
+    for(let i=0;i<pts.length;i++){
+      const hit = (t.f==='x' ? pts[i].x<=t.t : pts[i].y<=t.t);
+      F[i] += hit ? t.l : t.r;
+    }
+  }
+}
+document.getElementById('tuneEta').oninput = e=>{
+  eta = parseFloat(e.target.value);
+  document.getElementById('tuneEtav').textContent = eta.toFixed(2);
+};
+document.getElementById('tuneN').oninput = e=>{
+  const target = +e.target.value;
+  document.getElementById('tuneNv').textContent = target;
+  while(trees.length < target) addTree();
+  if(trees.length > target){ trees.length = target; losses.length = target; recomputeF(); }
+  draw();
+};
 
 randomData();
 </script>

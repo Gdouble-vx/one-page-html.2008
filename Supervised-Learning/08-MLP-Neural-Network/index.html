@@ -41,6 +41,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:220px;accent-color:#db2777}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -107,7 +111,14 @@
 
   <section>
     <h2>⚙️ Parameter Tuning</h2>
-    <p class="lead">MLP มีพารามิเตอร์เยอะที่สุด — เริ่มจากโครงสร้างเล็ก ๆ แล้วค่อยเพิ่ม (หน้านี้ใช้ 2 hidden nodes, lr=0.5)</p>
+    <p class="lead">MLP มีพารามิเตอร์เยอะที่สุด — เริ่มจากโครงสร้างเล็ก ๆ แล้วค่อยเพิ่ม (หน้านี้ใช้ 2 hidden nodes)</p>
+    <div class="tune-grid">
+      <label class="tune">Learning rate (lr)
+        <input type="range" id="tuneLr" min="0.05" max="2" step="0.05" value="0.5">
+        <b id="tuneLrv">0.50</b>
+      </label>
+    </div>
+    <p class="hint">💡 ปรับแล้วกด "🔄 รีเซ็ตน้ำหนัก" แล้วกด "🚀 เริ่มฝึก" ใหม่ — lr ใหญ่เกิน loss จะพวยพุ่ง</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">Hidden layers & neurons</div>
@@ -164,6 +175,7 @@
 // --- MLP: 2 inputs -> 2 hidden (ReLU) -> 1 output (sigmoid) ---
 let W1=[[0,0],[0,0]], b1=[0,0], W2=[0,0], b2=0;
 let epoch=0, running=false, timer=null;
+let lrMLP = 0.5;   // ปรับได้จาก slider ใน Parameter Tuning
 
 function initWeights(){
   const r = ()=>Math.random()*2-1;
@@ -188,7 +200,7 @@ function forward(x){
   return {h0,h1,out};
 }
 
-function trainStep(lr=0.5){
+function trainStep(){ const lr = lrMLP;
   let dW1=[[0,0],[0,0]], db1=[0,0], dW2=[0,0], db2=0;
   for(const d of data){
     const f = forward(d.x);
@@ -313,6 +325,12 @@ document.getElementById('trainBtn').onclick = ()=>{
   }, 40);
 };
 document.getElementById('resetBtn').onclick = ()=>{ initWeights(); draw(); };
+
+// --- Parameter Tuning: learning rate slider ---
+document.getElementById('tuneLr').oninput = e=>{
+  lrMLP = parseFloat(e.target.value);
+  document.getElementById('tuneLrv').textContent = lrMLP.toFixed(2);
+};
 
 initWeights();
 draw();

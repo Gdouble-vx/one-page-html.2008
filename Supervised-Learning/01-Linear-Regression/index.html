@@ -37,6 +37,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:200px;accent-color:#3b82f6}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -100,6 +104,24 @@
   <section>
     <h2>⚙️ Parameter Tuning</h2>
     <p class="lead">ถึงแม้ Linear Regression จะคำนวณปิด (closed-form) แต่ยังมีพารามิเตอร์ให้ปรับเพื่อเพิ่มความแม่นยำและลด overfit</p>
+    <div class="tune-grid">
+      <label class="tune">ความชัน m
+        <input type="range" id="tuneM" min="-3" max="3" step="0.01" value="1">
+        <b id="tuneMv">1.00</b>
+      </label>
+      <label class="tune">จุดตัด b
+        <input type="range" id="tuneB" min="0" max="440" step="1" value="220">
+        <b id="tuneBv">220</b>
+      </label>
+      <button id="resetTune">🔄 ใช้ค่า Best Fit</button>
+    </div>
+    <div class="stats">
+      <div class="stat">เส้นของคุณ (เหลือง): <b id="userEq" style="color:#facc15">y = 1.00x + 220</b></div>
+      <div class="stat">MSE เส้นคุณ: <b id="userMse">—</b></div>
+      <div class="stat">MSE Best Fit: <b id="bestMse">—</b></div>
+      <div class="stat">R² เส้นคุณ: <b id="userR2">—</b></div>
+    </div>
+    <p class="hint">💡 ลองปรับ m (ความชัน) และ b (จุดตัด) ดูว่าเส้นเหลืองใกล้เส้นน้ำเงินแค่ไหน — ยิ่ง MSE ต่ำยิ่งดี</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">Regularization strength (α / λ)</div>
@@ -147,6 +169,7 @@ const W = cv.width, H = cv.height;
 const PAD = 50;
 
 let pts = [];
+let userM = null, userB = null, lastM = 0, lastB = 0, lastMse = 0;
 
 function randomData(n = 14){
   pts = [];
@@ -176,6 +199,7 @@ function fit(){
   }
   const r2 = ssTot === 0 ? 0 : 1 - ssRes/ssTot;
   const mse = ssRes/n;
+  lastM = m; lastB = b; lastMse = mse;
   draw(m, b, r2, mse);
   updateStats(m, b, r2, mse);
 }
@@ -215,6 +239,15 @@ function draw(m, b, r2, mse){
     }
     ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
   }
+  // user-tuned line (from Parameter Tuning sliders)
+  if(userM !== null){
+    ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2.5; ctx.setLineDash([8,6]);
+    ctx.beginPath();
+    ctx.moveTo(PAD, userM*PAD + userB);
+    ctx.lineTo(W-PAD, userM*(W-PAD) + userB);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
   // points
   for(const p of pts){
     ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
@@ -246,6 +279,43 @@ cv.addEventListener('mouseup', ()=>{ dragging = null; });
 
 document.getElementById('randomBtn').onclick = ()=>randomData();
 document.getElementById('clearBtn').onclick = ()=>{ pts=[]; fit(); };
+
+// --- Parameter Tuning: interactive m / b sliders ---
+const tuneM = document.getElementById('tuneM');
+const tuneB = document.getElementById('tuneB');
+function updateTune(){
+  if(userM === null) return;
+  const n = pts.length;
+  let ssRes = 0, ssTot = 0, meanY = 0;
+  for(const p of pts) meanY += p.y;
+  meanY /= n || 1;
+  for(const p of pts){
+    const pred = userM*p.x + userB;
+    ssRes += (p.y - pred)**2;
+    ssTot += (p.y - meanY)**2;
+  }
+  const mse = n ? ssRes/n : 0;
+  const r2 = ssTot === 0 ? 0 : 1 - ssRes/ssTot;
+  document.getElementById('userMse').textContent = mse.toFixed(1);
+  document.getElementById('bestMse').textContent = lastMse.toFixed(1);
+  document.getElementById('userR2').textContent = r2.toFixed(3);
+  document.getElementById('userEq').textContent = `y = ${userM.toFixed(2)}x + ${userB.toFixed(0)}`;
+}
+function onTune(){
+  userM = parseFloat(tuneM.value);
+  userB = parseFloat(tuneB.value);
+  document.getElementById('tuneMv').textContent = userM.toFixed(2);
+  document.getElementById('tuneBv').textContent = userB.toFixed(0);
+  updateTune();
+  draw();
+}
+tuneM.oninput = onTune;
+tuneB.oninput = onTune;
+document.getElementById('resetTune').onclick = ()=>{
+  tuneM.value = Math.max(-3, Math.min(3, lastM));
+  tuneB.value = Math.max(0, Math.min(440, lastB));
+  onTune();
+};
 
 randomData();
 </script>

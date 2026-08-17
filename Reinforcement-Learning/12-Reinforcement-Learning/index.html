@@ -39,6 +39,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:180px;accent-color:#16a34a}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px}
 </style>
@@ -109,7 +113,26 @@
 
   <section>
     <h2>⚙️ Parameter Tuning</h2>
-    <p class="lead">Q-Learning พึ่งพาพารามิเตอร์ไม่กี่ตัว + การออกแบบรางวัล (reward) — หน้านี้ใช้ α=0.15, γ=0.98, ε เริ่ม 1.0 ลด 0.9995</p>
+    <p class="lead">Q-Learning พึ่งพาพารามิเตอร์ไม่กี่ตัว + การออกแบบรางวัล (reward)</p>
+    <div class="tune-grid">
+      <label class="tune">α (learning rate)
+        <input type="range" id="tuneA" min="0.05" max="0.5" step="0.01" value="0.15">
+        <b id="tuneAv">0.15</b>
+      </label>
+      <label class="tune">γ (discount)
+        <input type="range" id="tuneG" min="0.8" max="0.99" step="0.01" value="0.98">
+        <b id="tuneGv">0.98</b>
+      </label>
+      <label class="tune">ε เริ่มต้น
+        <input type="range" id="tuneE" min="0.5" max="1" step="0.05" value="1">
+        <b id="tuneEv">1.00</b>
+      </label>
+      <label class="tune">ε decay
+        <input type="range" id="tuneD" min="0.99" max="0.9999" step="0.0001" value="0.9995">
+        <b id="tuneDv">0.9995</b>
+      </label>
+    </div>
+    <p class="hint">💡 ปรับแล้วกด "🔄 รีเซ็ต Q-table" เพื่อเริ่มเรียนรู้ใหม่ด้วยค่าใหม่ — γ ใกล้ 1 = เอเจนต์มองการณ์ไกล</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">Learning rate (α)</div>
@@ -166,6 +189,7 @@ const DR=[-1,0,1,0], DC=[0,1,0,-1];
 
 let Q=[], agent={r:0,c:0}, episode=0, steps=0, totalReward=0;
 let eps=1.0, epsMin=0.05, epsDecay=0.9995;
+let alpha=0.15, gamma=0.98, epsStart=1.0;   // ปรับได้จาก slider ใน Parameter Tuning
 let recent=[];
 let playing=false, timer=null, slow=false;
 
@@ -180,7 +204,7 @@ function initQ(){
       Q[r].push(isWall(r,c)?null:[0,0,0,0]);
     }
   }
-  agent={...START}; steps=0; totalReward=0; episode=0; eps=1.0; recent=[];
+  agent={...START}; steps=0; totalReward=0; episode=0; eps=epsStart; recent=[];
 }
 
 function chooseAction(r,c){
@@ -205,7 +229,7 @@ function step(){
   if(done) reward=10;
   const q=Q[r][c];
   const maxNext = done ? 0 : Math.max(...Q[nr][nc]);
-  q[a] = q[a] + 0.15*(reward + 0.98*maxNext - q[a]);
+  q[a] = q[a] + alpha*(reward + gamma*maxNext - q[a]);
   agent.r=nr; agent.c=nc;
   steps++; totalReward+=reward;
   eps=Math.max(epsMin, eps*epsDecay);
@@ -327,6 +351,19 @@ document.getElementById('epBtn').onclick=()=>{
   draw();
 };
 document.getElementById('resetBtn').onclick=()=>{ initQ(); draw(); };
+
+// --- Parameter Tuning sliders ---
+const tuneSet = (id, valId, fn)=>{
+  document.getElementById(id).oninput = e=>{
+    const v = parseFloat(e.target.value);
+    fn(v);
+    document.getElementById(valId).textContent = e.target.value;
+  };
+};
+tuneSet('tuneA','tuneAv', v=>alpha=v);
+tuneSet('tuneG','tuneGv', v=>gamma=v);
+tuneSet('tuneE','tuneEv', v=>epsStart=v);
+tuneSet('tuneD','tuneDv', v=>epsDecay=v);
 
 initQ();
 draw();

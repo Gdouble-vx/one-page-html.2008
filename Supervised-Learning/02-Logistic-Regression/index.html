@@ -39,6 +39,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:200px;accent-color:#ea580c}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -107,6 +111,17 @@
   <section>
     <h2>⚙️ Parameter Tuning</h2>
     <p class="lead">พารามิเตอร์หลักของ Logistic Regression — ฝึกในหน้านี้ใช้ lr=0.1, 600 epochs</p>
+    <div class="tune-grid">
+      <label class="tune">Learning rate (lr)
+        <input type="range" id="tuneLr" min="0.01" max="0.5" step="0.01" value="0.1">
+        <b id="tuneLrv">0.10</b>
+      </label>
+      <label class="tune">Max epochs
+        <input type="range" id="tuneEp" min="50" max="2000" step="50" value="600">
+        <b id="tuneEpv">600</b>
+      </label>
+    </div>
+    <p class="hint">💡 ปรับแล้วกด "🏋️ ฝึกโมเดล" เพื่อดูผล — lr ใหญ่ = เร็วแต่แกว่ง, lr เล็ก = ช้าแต่เนียน</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">Learning rate (lr)</div>
@@ -156,6 +171,7 @@ const PAD = 50;
 let pts = [];
 let w1=0, w2=0, b=0, epoch=0;
 let training = false;
+let lr = 0.1, maxEpochs = 600;   // ปรับได้จาก slider ใน Parameter Tuning
 
 function randomData(n=26){
   pts = [];
@@ -197,7 +213,7 @@ function accuracy(){
 
 function trainStep(){
   if(!pts.length) return;
-  const lr = 0.1;
+  // lr เป็นตัวแปร global ที่ปรับได้จาก slider ใน Parameter Tuning
   let g1=0,g2=0,gb=0;
   for(const p of pts){
     const n = normalize(p);
@@ -266,12 +282,22 @@ document.getElementById('trainBtn').onclick = ()=>{
   const iv = setInterval(()=>{
     if(!training){ clearInterval(iv); return; }
     trainStep();
-    if(epoch>=600){ training=false; clearInterval(iv); document.getElementById('trainBtn').textContent='🏋️ ฝึกโมเดล (Gradient Descent)'; }
+    if(epoch>=maxEpochs){ training=false; clearInterval(iv); document.getElementById('trainBtn').textContent='🏋️ ฝึกโมเดล (Gradient Descent)'; }
   }, 30);
 };
 document.getElementById('stepBtn').onclick = ()=>trainStep();
 document.getElementById('resetBtn').onclick = ()=>randomData();
 document.getElementById('clearBtn').onclick = ()=>{ pts=[]; w1=0;w2=0;b=0;epoch=0; update(); };
+
+// --- Parameter Tuning sliders ---
+document.getElementById('tuneLr').oninput = e=>{
+  lr = parseFloat(e.target.value);
+  document.getElementById('tuneLrv').textContent = lr.toFixed(2);
+};
+document.getElementById('tuneEp').oninput = e=>{
+  maxEpochs = +e.target.value;
+  document.getElementById('tuneEpv').textContent = maxEpochs;
+};
 
 randomData();
 </script>

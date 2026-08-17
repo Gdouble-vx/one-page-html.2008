@@ -43,6 +43,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+  .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
+  .tune b{color:#facc15;font-family:Consolas,monospace}
+  .tune input[type=range]{width:220px;accent-color:#4f46e5}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -108,7 +112,14 @@
 
   <section>
     <h2>⚙️ Parameter Tuning</h2>
-    <p class="lead">พารามิเตอร์ที่ควบคุมการเติบโตของต้นไม้ — ปรับเพื่อสมดุลระหว่าง underfit กับ overfit (หน้านี้ลองกด "เพิ่มความลึก" ดู)</p>
+    <p class="lead">พารามิเตอร์ที่ควบคุมการเติบโตของต้นไม้ — ปรับเพื่อสมดุลระหว่าง underfit กับ overfit</p>
+    <div class="tune-grid">
+      <label class="tune">max_depth (ความลึก)
+        <input type="range" id="tuneDepth" min="0" max="6" step="1" value="0">
+        <b id="tuneDepthv">0</b>
+      </label>
+    </div>
+    <p class="hint">💡 เลื่อน depth แล้วต้นไม้จะถูกสร้างใหม่ให้ลึกตามที่ตั้ง — ลึกเกินไป = overfit (เส้นแบ่งยิบย่อย)</p>
     <div class="param-grid">
       <div class="param-card">
         <div class="pname">max_depth (ความลึกสูงสุด)</div>
@@ -335,6 +346,15 @@ document.getElementById('growBtn').onclick = ()=>{
   draw();
 };
 document.getElementById('resetBtn').onclick = ()=>{ randomData(); };
+
+// --- Parameter Tuning: max_depth slider ---
+document.getElementById('tuneDepth').oninput = e=>{
+  const d = +e.target.value;
+  document.getElementById('tuneDepthv').textContent = d;
+  root = {inds:pts.map((_,i)=>i), split:null, left:null, right:null};
+  if(d>0) grow(root, d);
+  draw();
+};
 
 randomData();
 </script>
