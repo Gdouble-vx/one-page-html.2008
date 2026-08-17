@@ -34,20 +34,20 @@ One-page interactive HTML demos ที่ visualize หลักการทำ�
 
 | # | หัวข้อ | หมวด | สิ่งที่เล่นได้ |
 |---|--------|------|---------------|
-| 01 | Linear Regression | Supervised | ลากจุด ดูเส้นฟิต + R² |
-| 02 | Logistic Regression | Supervised | ฝึก Gradient Descent ดูเส้นแบ่ง |
-| 03 | kNN | Supervised | เลื่อน k ดูเพื่อนบ้านโหวต |
-| 04 | Decision Tree | Supervised | เติบโตต้นไม้ทีละชั้น |
-| 05 | Random Forest | Supervised | 60 ต้นโหวตรวม |
-| 06 | SVM | Supervised | Max-margin + Support Vectors |
-| 07 | K-Means | Supervised* | จัดกลุ่มทีละขั้นตอน |
-| 08 | MLP | Supervised | เรียนรู้ XOR + Backprop |
-| 09 | CNN | Unsupervised* | วาดภาพ ดู kernel สแกน |
-| 10 | LSTM | Unsupervised* | ควบคุมประตูความจำ 3 บาน |
-| 11 | Transformer | Unsupervised* | Attention heatmap |
-| 12 | Reinforcement Learning | Reinforcement | Q-Learning หาทางไปดาว ⭐ |
-| 13 | XGBoost | Supervised | Boosting แก้ residual |
 | 14 | Stacking | Supervised | 3 base models → meta-model |
+| 13 | XGBoost | Supervised | Boosting แก้ residual |
+| 12 | Reinforcement Learning | Reinforcement | Q-Learning หาทางไปดาว ⭐ |
+| 11 | Transformer | Unsupervised* | Attention heatmap |
+| 10 | LSTM | Unsupervised* | ควบคุมประตูความจำ 3 บาน |
+| 09 | CNN | Unsupervised* | วาดภาพ ดู kernel สแกน |
+| 08 | MLP | Supervised | เรียนรู้ XOR + Backprop |
+| 07 | K-Means | Supervised* | จัดกลุ่มทีละขั้นตอน |
+| 06 | SVM | Supervised | Max-margin + Support Vectors |
+| 05 | Random Forest | Supervised | 60 ต้นโหวตรวม |
+| 04 | Decision Tree | Supervised | เติบโตต้นไม้ทีละชั้น |
+| 03 | kNN | Supervised | เลื่อน k ดูเพื่อนบ้านโหวต |
+| 02 | Logistic Regression | Supervised | ฝึก Gradient Descent ดูเส้นแบ่ง |
+| 01 | Linear Regression | Supervised | ลากจุด ดูเส้นฟิต + R² |
 
 > \* หมายเหตุ: CNN/LSTM/Transformer เป็น deep learning (supervised ในทางปฏิบัติ) และ K-Means เป็น unsupervised — จัดตามลำดับที่กำหนดให้ในโจทย์
 
