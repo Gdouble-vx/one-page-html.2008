@@ -62,13 +62,14 @@
   <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
-    <p class="lead">Attention map 5×5 ด้านซ้าย — แถว = คำที่เป็น Query, คอลัมน์ = คำที่เป็น Key สีเข้ม = ให้ความสนใจมาก คลิกแถวเพื่อไฮไลต์ ด้านล่างแสดงผล <b>Output = Σ α·V</b> ที่คำนวณจาก projection จริง Q=E·Wq, K=E·Wk, V=E·Wv (กด 🎲 เพื่อสุ่ม Wq/Wk/Wv ใหม่)</p>
+    <p class="lead">Attention map <b>2 หัว (HEAD 1 / HEAD 2)</b> — แถว = คำที่เป็น Query, คอลัมน์ = Key สีเข้ม = ให้ความสนใจมาก คลิกแถวเพื่อเลือกคำ แล้วดูว่า <b>แต่ละหัว "มอง" ต่างกันยังไง</b> ด้านล่างแสดงผลต่อหัวและผลรวม <b>Concat(head₁,head₂)·Wᵒ</b> ตามสูตร paper — projection Q_h=E·Wq_h, K_h=E·Wk_h, V_h=E·Wv_h แยกกันต่อหัว (กด 🎲 เพื่อสุ่มใหม่)</p>
     <div class="two">
       <div>
-        <canvas id="attn" width="480" height="480"></canvas>
+        <canvas id="attn" width="480" height="460"></canvas>
         <div class="stats">
           <div class="stat">กำลังดู: <b id="qword">—</b></div>
-          <div class="stat">Attention focus: <b id="focus">—</b></div>
+          <div class="stat">Head 1 มอง: <b id="focus1">—</b></div>
+          <div class="stat">Head 2 มอง: <b id="focus2">—</b></div>
           <div class="stat">Temperature: <b id="tempVal">1.0</b></div>
         </div>
       </div>
@@ -83,7 +84,7 @@
       <label style="font-size:13px">Temperature (ความคมของ attention)
         <input type="range" id="temp" min="0.2" max="3" step="0.1" value="1" style="vertical-align:middle">
       </label>
-      <button id="shuffleBtn">🎲 ข้อมูลใหม่ (สุ่ม Wq/Wk/Wv + คำใหม่)</button>
+      <button id="shuffleBtn">🎲 ข้อมูลใหม่ (สุ่ม Wq/Wk/Wv/Wᵒ + คำใหม่)</button>
       <span class="hint">💡 อุณหภูมิต่ำ = โฟกัสคำเดียวมาก ๆ, สูง = กระจายความสนใจทั่ว</span>
     </div>
   </section>
@@ -133,13 +134,13 @@
 
   <section>
     <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">Q = X·Wq &nbsp; K = X·Wk &nbsp; V = X·Wv<br>Attention(Q,K,V) = softmax(Q·Kᵀ / √dₖ) · V</div>
+    <div class="formula">Q_h = X·Wq_h &nbsp; K_h = X·Wk_h &nbsp; V_h = X·Wv_h &nbsp; (h = 1…H)<br>head_h = softmax(Q_h·K_hᵀ / √dₖ) · V_h<br>MultiHead(Q,K,V) = Concat(head₁,…,head_H) · Wᵒ</div>
     <ol>
       <li>แปลงทุกคำให้เป็นเวกเตอร์ (embedding) แล้วสร้าง <b>Query (Q)</b>, <b>Key (K)</b>, <b>Value (V)</b> ด้วยการคูณเมทริกซ์น้ำหนัก</li>
       <li>คำนวณ <b>score</b> = Q·Kᵀ: คำนี้ "ควรสนใจ" คำอื่นมากแค่ไหน (ห้ามมองคำอนาคตด้วย masking ใน decoder)</li>
       <li>หารด้วย √dₖ แล้วทำ <b>softmax</b> → กลายเป็นน้ำหนักที่รวมกันเป็น 1</li>
       <li>คูณกับ <b>V</b> แล้วรวมกัน → คำใหม่ที่ "รู้บริบท" ของทั้งประโยค</li>
-      <li><b>Multi-Head Attention</b>: ทำหลายชุดพร้อมกัน (แต่ละหัวจับความสัมพันธ์ต่างแบบ) + Positional Encoding เพื่อให้รู้ตำแหน่งของคำ</li>
+      <li><b>Multi-Head Attention</b>: แยกเป็นหลายหัว (head) — แต่ละหัวมี projection Q/K/V และแพตเทิร์นความสนใจของตัวเอง คำนวณ attention พร้อมกัน แล้ว <b>Concat ผลรวมทุกหัว แล้วคูณ Wᵒ</b> รวมเป็น output เดียว + Positional Encoding เพื่อให้รู้ตำแหน่งของคำ</li>
     </ol>
     <p class="lead" style="margin-top:12px">เพราะทุกคำคำนวณพร้อมกันได้ (ไม่ต้องรอทีละคำ) Transformer จึงฝึกเร็วกว่า RNN/LSTM มาก และ scale ไปเป็นโมเดลภาษาขนาดยักษ์ได้</p>
   </section>
@@ -178,24 +179,25 @@
 <script>
 const cv=document.getElementById('attn'), ctx=cv.getContext('2d');
 const WORDS=['แมว','นอน','บน','โต๊ะ','อาหาร'];
-const D=8;
-let E=null;                 // embeddings (5 x D)
-let Wq=null,Wk=null,Wv=null; // projection matrices (D x D) — แยกกันจริงตามสูตร
+const D=8, H=2, DH=D/H;      // d_model=8, 2 หัว, head_dim=4
+let E=null;                  // embeddings (5 x D)
+let heads=null;              // {q,k,v} — ต่อหัวเป็นเมทริกซ์ D×DH แยกกันตามสูตร
+let Wo=null;                 // output projection D×D — Concat(หัวทั้งหมด)·Wᵒ
 let selRow=0;
 
-function randMat(){
+function randMat(rows,cols){
   const M=[];
-  for(let i=0;i<D;i++){
+  for(let i=0;i<rows;i++){
     const row=[];
-    for(let d=0;d<D;d++) row.push((Math.random()*2-1));
+    for(let j=0;j<cols;j++) row.push((Math.random()*2-1));
     M.push(row);
   }
   return M;
 }
 
-function project(M,v){      // M · v (เมทริกซ์ D×D คูณเวกเตอร์ D มิติ)
-  const out=new Array(D).fill(0);
-  for(let i=0;i<D;i++) for(let j=0;j<D;j++) out[i]+=M[i][j]*v[j];
+function project(M,v){       // M · v (แถวของ M = มิติ output)
+  const out=new Array(M.length).fill(0);
+  for(let i=0;i<M.length;i++) for(let j=0;j<v.length;j++) out[i]+=M[i][j]*v[j];
   return out;
 }
 
@@ -206,85 +208,122 @@ function newData(){
     for(let d=0;d<D;d++) v.push((Math.random()*2-1));
     E.push(v);
   }
-  Wq=randMat(); Wk=randMat(); Wv=randMat();
+  heads={q:[],k:[],v:[]};
+  for(let h=0;h<H;h++){
+    heads.q.push(randMat(DH,D));   // DH×D: project() ให้ผล DH มิติ ตาม head_dim
+    heads.k.push(randMat(DH,D));
+    heads.v.push(randMat(DH,D));
+  }
+  Wo=randMat(D,D);
   selRow=0;
   draw();
 }
 
 function attention(temp){
-  // ตรงตามสูตรจริง: Q = E·Wq, K = E·Wk, V = E·Wv (projection แยกกัน)
-  const Q=E.map(v=>project(Wq,v));
-  const K=E.map(v=>project(Wk,v));
-  const V=E.map(v=>project(Wv,v));
-  const S=[], out=[];
-  for(let i=0;i<5;i++){
-    const row=[];
-    for(let j=0;j<5;j++){
-      let s=0;
-      for(let d=0;d<D;d++) s+=Q[i][d]*K[j][d];
-      row.push(s/Math.sqrt(D));   // scale ด้วย √dₖ
+  // Multi-Head ตาม paper: head_h = Attention(E·Wq_h, E·Wk_h, E·Wv_h)
+  // แล้ว MultiHead(Q,K,V) = Concat(head₁,...,head_H) · Wᵒ
+  const perHead=[];
+  for(let h=0;h<H;h++){
+    const Q=E.map(v=>project(heads.q[h],v));
+    const K=E.map(v=>project(heads.k[h],v));
+    const V=E.map(v=>project(heads.v[h],v));
+    const S=[], out=[];
+    for(let i=0;i<5;i++){
+      const row=[];
+      for(let j=0;j<5;j++){
+        let s=0;
+        for(let d=0;d<DH;d++) s+=Q[i][d]*K[j][d];
+        row.push(s/Math.sqrt(DH));   // scale ด้วย √dₖ (dₖ = head_dim)
+      }
+      const mx=Math.max(...row);
+      const ex=row.map(v=>Math.exp((v-mx)/temp));
+      const sum=ex.reduce((a,b)=>a+b,0);
+      const alpha=ex.map(v=>v/sum);
+      S.push(alpha);
+      const o=new Array(DH).fill(0);
+      for(let j=0;j<5;j++) for(let d=0;d<DH;d++) o[d]+=alpha[j]*V[j][d];
+      out.push(o);
     }
-    // softmax
-    const mx=Math.max(...row);
-    const ex=row.map(v=>Math.exp((v-mx)/temp));
-    const sum=ex.reduce((a,b)=>a+b,0);
-    const alpha=ex.map(v=>v/sum);
-    S.push(alpha);
-    // output_i = Σⱼ αᵢⱼ · Vⱼ (weighted sum ของ Value — ตามสูตรจริง)
-    const o=new Array(D).fill(0);
-    for(let j=0;j<5;j++) for(let d=0;d<D;d++) o[d]+=alpha[j]*V[j][d];
-    out.push(o);
+    perHead.push({S, out});
   }
-  return {S, out};
+  // Concat ผลของทุกหัว แล้วคูณ Wᵒ
+  const final=[];
+  for(let i=0;i<5;i++){
+    const c=[];
+    for(let h=0;h<H;h++) c.push(...perHead[h].out[i]);
+    final.push(project(Wo,c));
+  }
+  return {heads:perHead, final};
 }
 
 function draw(){
-  const {S, out}=attention(+document.getElementById('temp').value);
+  const {heads:ph, final}=attention(+document.getElementById('temp').value);
   ctx.clearRect(0,0,cv.width,cv.height);
   ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,cv.width,cv.height);
-  const cell=48, x0=130, y0=80;
-  ctx.fillStyle='#94a3b8'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
-  ctx.fillText('QUERY ↓', x0+cell*2.5, 40);
-  ctx.fillText('KEY →', 40, y0-10);
-  ctx.save(); ctx.translate(30, y0+cell*2.5); ctx.rotate(-Math.PI/2); ctx.fillText('QUERY ↓',0,0); ctx.restore();
-  // heatmap
-  let maxF=0, focus='';
-  for(let i=0;i<5;i++){
-    for(let j=0;j<5;j++){
-      const v=S[i][j];
-      if(i===selRow && v>maxF){ maxF=v; focus=WORDS[j]; }
-      ctx.fillStyle=`rgba(244,63,94,${v.toFixed(3)})`;
-      ctx.fillRect(x0+j*cell, y0+i*cell, cell-3, cell-3);
-      ctx.strokeStyle='#0b1220'; ctx.strokeRect(x0+j*cell, y0+i*cell, cell-3, cell-3);
-      if(v>0.15){
-        ctx.fillStyle='#fff'; ctx.font='10px sans-serif';
-        ctx.fillText((v*100).toFixed(0), x0+j*cell+cell/2-6, y0+i*cell+cell/2+3);
+  const cell=38, X0=[48,268], y0=85;   // heatmap 2 หัว วางข้างกัน
+  // titles + axis labels
+  ctx.textAlign='center'; ctx.fillStyle='#fda4af'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('HEAD 1', X0[0]+cell*2.5, y0-12);
+  ctx.fillText('HEAD 2', X0[1]+cell*2.5, y0-12);
+  ctx.fillStyle='#94a3b8'; ctx.font='10px sans-serif';
+  ctx.fillText('KEY →', X0[0]+cell*2.5, 44);
+  ctx.fillText('KEY →', X0[1]+cell*2.5, 44);
+  ctx.save(); ctx.translate(X0[0]-10, y0+cell*2.5); ctx.rotate(-Math.PI/2); ctx.fillText('QUERY ↓',0,0); ctx.restore();
+  ctx.save(); ctx.translate(X0[1]-10, y0+cell*2.5); ctx.rotate(-Math.PI/2); ctx.fillText('QUERY ↓',0,0); ctx.restore();
+  // heatmap ต่อหัว
+  const focusW=['',''], fmax=[0,0];
+  for(let h=0;h<H;h++){
+    const S=ph[h].S;
+    for(let i=0;i<5;i++){
+      for(let j=0;j<5;j++){
+        const v=S[i][j];
+        if(i===selRow && v>fmax[h]){ fmax[h]=v; focusW[h]=WORDS[j]; }
+        ctx.fillStyle=`rgba(244,63,94,${v.toFixed(3)})`;
+        ctx.fillRect(X0[h]+j*cell, y0+i*cell, cell-3, cell-3);
+        ctx.strokeStyle='#0b1220'; ctx.strokeRect(X0[h]+j*cell, y0+i*cell, cell-3, cell-3);
+        if(v>0.15){
+          ctx.fillStyle='#fff'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+          ctx.fillText((v*100).toFixed(0), X0[h]+j*cell+cell/2, y0+i*cell+cell/2+3);
+        }
       }
     }
+    // row highlight
+    ctx.strokeStyle='#facc15'; ctx.lineWidth=3;
+    ctx.strokeRect(X0[h]-4, y0+selRow*cell-4, 5*cell+2, cell+2);
+    // word labels
+    ctx.textAlign='center'; ctx.fillStyle='#e2e8f0'; ctx.font='10px sans-serif';
+    for(let j=0;j<5;j++) ctx.fillText(WORDS[j], X0[h]+j*cell+cell/2, y0+5*cell+16);
+    ctx.textAlign='right';
+    for(let i=0;i<5;i++) ctx.fillText(WORDS[i], X0[h]-8, y0+i*cell+cell/2+3);
   }
-  // row highlight
-  ctx.strokeStyle='#facc15'; ctx.lineWidth=3;
-  ctx.strokeRect(x0-4, y0+selRow*cell-4, 5*cell+2, cell+2);
-  // labels
-  ctx.textAlign='center'; ctx.fillStyle='#e2e8f0'; ctx.font='13px sans-serif';
-  for(let j=0;j<5;j++) ctx.fillText(WORDS[j], x0+j*cell+cell/2, y0+5*cell+20);
-  for(let i=0;i<5;i++) ctx.fillText(WORDS[i], x0-18, y0+i*cell+cell/2);
-  // weighted sum output — Σ α·V จริง
-  const yb=y0+5*cell+42;
-  ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif'; ctx.textAlign='left';
+  // output — ตามสูตรจริง: head → concat → Wᵒ
+  const focus= fmax[0]>=fmax[1] ? focusW[0] : focusW[1];
+  ctx.textAlign='left';
+  const yb=y0+5*cell+34;   // 309
+  ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif';
   ctx.fillText('คำที่ถูกมองมากที่สุดจาก "'+WORDS[selRow]+'":', 40, yb);
   ctx.fillStyle='#fda4af'; ctx.font='bold 15px sans-serif';
   ctx.fillText(focus||'—', 40, yb+20);
-  ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif';
-  ctx.fillText('Output = Σ αⱼ·Vⱼ (weighted sum ของ Value):', 40, yb+44);
-  ctx.fillStyle='#7dd3fc'; ctx.font='bold 10px Consolas,monospace';
-  ctx.fillText('[ '+out[selRow].map(v=>v.toFixed(2)).join(', ')+' ]', 40, yb+64);
-  const tops=S[selRow].map((a,j)=>({a,w:WORDS[j]})).sort((p,q)=>q.a-p.a);
-  ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif';
-  ctx.fillText('= '+tops.map(t=>t.a.toFixed(2)+'·V('+t.w+')').join(' + '), 40, yb+84);
+  const line=(y,label,vec,bold)=>{
+    ctx.fillStyle='#94a3b8'; ctx.font=(bold?'bold 9px ':'9px ')+'Consolas,monospace';
+    ctx.fillText(label, 40, y);
+    const w=ctx.measureText(label).width;
+    ctx.fillStyle='#7dd3fc';
+    ctx.fillText('[ '+vec.map(v=>v.toFixed(2)).join(', ')+' ]', 40+w, y);
+  };
+  line(yb+42, 'Head 1 out = ', ph[0].out[selRow], false);
+  line(yb+62, 'Head 2 out = ', ph[1].out[selRow], false);
+  const concat=[];
+  for(let h=0;h<H;h++) concat.push(...ph[h].out[selRow]);
+  line(yb+82, 'Concat(head₁, head₂) = ', concat, false);
+  line(yb+102, 'Final = Concat·Wᵒ = ', final[selRow], true);
+  const tops=ph[0].S[selRow].map((a,j)=>({a,w:WORDS[j]})).sort((p,q)=>q.a-p.a);
+  ctx.fillStyle='#94a3b8'; ctx.font='10px sans-serif';
+  ctx.fillText('head 1: '+tops.map(t=>t.a.toFixed(2)+'·V('+t.w+')').join(' + '), 40, yb+124);
 
   document.getElementById('qword').textContent = WORDS[selRow];
-  document.getElementById('focus').textContent = focus||'—';
+  document.getElementById('focus1').textContent = focusW[0]||'—';
+  document.getElementById('focus2').textContent = focusW[1]||'—';
   document.getElementById('tempVal').textContent = (+document.getElementById('temp').value).toFixed(1);
   drawArch();
 }
@@ -292,10 +331,13 @@ function draw(){
 cv.addEventListener('click', e=>{
   const rect=cv.getBoundingClientRect();
   const px=(e.clientX-rect.left)*(cv.width/rect.width), py=(e.clientY-rect.top)*(cv.height/rect.height);
-  const cell=48, x0=130, y0=80;
-  if(px>=x0&&px<x0+5*cell&&py>=y0&&py<y0+5*cell){
-    selRow=Math.floor((py-y0)/cell);
-    draw();
+  const cell=38, X0=[48,268], y0=85;
+  for(const x0 of X0){
+    if(px>=x0&&px<x0+5*cell&&py>=y0&&py<y0+5*cell){
+      selRow=Math.floor((py-y0)/cell);
+      draw();
+      return;
+    }
   }
 });
 
