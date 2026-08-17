@@ -310,10 +310,10 @@ function drawTree(node){
     n.id = nextId++;
     n.x = x; n.y = 40 + depth*64;
     const w = n.left || n.right ? 120 : 0;
-    place(n.left, depth+1, x - 70 - (w/2));
-    place(n.right, depth+1, x + 70 + (w/2));
+    place(n.left, depth+1, x - 55 - (w/2));
+    place(n.right, depth+1, x + 55 + (w/2));
   }
-  place(node, 0, 260);
+  place(node, 0, 230);
   let s = '';
   function link(n){
     if(!n) return;
@@ -332,11 +332,12 @@ function drawTree(node){
     const w = isLeaf ? 90 : 120, h = 34;
     s += `<rect x="${n.x-w/2}" y="${n.y-h/2}" width="${w}" height="${h}" rx="10" fill="${fill}" stroke="#475569"/>`;
     s += `<text x="${n.x}" y="${n.y+5}" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">${label}</text>`;
-    nodeSvg(n.left); nodeSvg(n.right);
+    if(n.left) nodeSvg(n.left);
+    if(n.right) nodeSvg(n.right);
   }
   nodeSvg(node);
   const h = maxDepth(node)*64 + 60;
-  el.innerHTML = `<svg width="520" height="${Math.max(h,120)}" style="background:#0b1220">${s}</svg>`;
+  el.innerHTML = `<svg width="480" height="${Math.max(h,120)}" style="background:#0b1220">${s}</svg>`;
 }
 
 document.getElementById('growBtn').onclick = ()=>{

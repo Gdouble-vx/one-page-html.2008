@@ -175,10 +175,10 @@
 <script>
 const cv=document.getElementById('demo'), ctx=cv.getContext('2d');
 const G=7, KS=3, OUT=5;
-const CELL=44;
-const ix=50, iy=60;          // input grid origin
-const kx=460, ky=90;         // kernel origin
-const ox=700, oy=110;        // output origin
+const CELL=38;
+const ix=40, iy=60;          // input grid origin
+const kx=430, ky=95;         // kernel origin
+const ox=640, oy=112;        // output origin
 
 let grid=Array(G).fill(0).map(()=>Array(G).fill(0));
 let pos=0, playing=false, timer=null;
