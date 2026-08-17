@@ -43,6 +43,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:16px;margin-top:8px;font-size:13px}
   .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px}
@@ -90,39 +94,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">out(i,j) = Σ Σ input(i+a, j+b) × kernel(a,b) + bias&nbsp;&nbsp;&nbsp;(แล้วตามด้วย ReLU)</div>
-    <ol>
-      <li><b>Convolution:</b> kernel (เช่น 3×3) เลื่อนทับภาพทีละตำแหน่ง คูณค่าพิกเซลกับน้ำหนักของ kernel แล้วรวมกัน → ได้ค่า 1 จุดใน feature map</li>
-      <li><b>Kernel หลายตัว:</b> แต่ละ kernel จับคุณลักษณะต่างกัน (ขอบแนวนอน แนวตั้ง มุม สี) → ได้หลาย channel</li>
-      <li><b>Activation (ReLU):</b> ตัดค่าลบออกเพื่อเพิ่ม non-linearity</li>
-      <li><b>Pooling:</b> ลดขนาดภาพ (เช่น max pooling 2×2) ให้เหลือเฉพาะค่าที่สำคัญ — ทำให้ทนต่อการเลื่อน/ย่อของวัตถุ</li>
-      <li>สลับ Convolution → Pooling หลายชั้น ยิ่งลึกยิ่งจับคุณลักษณะซับซ้อน (เส้น → รูปทรง → หน้า → วัตถุ) แล้วต่อด้วย Fully Connected ชั้นสุดท้าย</li>
-    </ol>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>แม่นยำระดับมนุษย์ในงานภาพ (จำแนกวัตถุ ตรวจจับใบหน้า)</li>
-        <li>ใช้พารามิเตอร์น้อยกว่า MLP มาก (kernel แชร์กันทั่วภาพ)</li>
-        <li>จับตำแหน่งวัตถุได้แม้ขยับ/หมุนเล็กน้อย (translation invariance)</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ต้องใช้ข้อมูลและ GPU เยอะ</li>
-        <li>เป็นกล่องดำ อธิบายยาก (แม้มีเทคนิค visualize)</li>
-        <li>ภาพบิดเบี้ยวหรือมุมมองแปลก ๆ ยังทำพลาดได้</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">CNN มีพารามิเตอร์หลายระดับ ตั้งแต่โครงสร้าง (architecture) จนถึงการฝึก (training)</p>
     <div class="param-grid">
       <div class="param-card">
@@ -161,6 +134,37 @@
         <div class="pdesc">สร้างข้อมูลฝึกเพิ่มจากภาพเดิม</div>
         <div class="ptip">💡 วิธีลด overfit ที่ได้ผลที่สุดสำหรับงานภาพ</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">out(i,j) = Σ Σ input(i+a, j+b) × kernel(a,b) + bias&nbsp;&nbsp;&nbsp;(แล้วตามด้วย ReLU)</div>
+    <ol>
+      <li><b>Convolution:</b> kernel (เช่น 3×3) เลื่อนทับภาพทีละตำแหน่ง คูณค่าพิกเซลกับน้ำหนักของ kernel แล้วรวมกัน → ได้ค่า 1 จุดใน feature map</li>
+      <li><b>Kernel หลายตัว:</b> แต่ละ kernel จับคุณลักษณะต่างกัน (ขอบแนวนอน แนวตั้ง มุม สี) → ได้หลาย channel</li>
+      <li><b>Activation (ReLU):</b> ตัดค่าลบออกเพื่อเพิ่ม non-linearity</li>
+      <li><b>Pooling:</b> ลดขนาดภาพ (เช่น max pooling 2×2) ให้เหลือเฉพาะค่าที่สำคัญ — ทำให้ทนต่อการเลื่อน/ย่อของวัตถุ</li>
+      <li>สลับ Convolution → Pooling หลายชั้น ยิ่งลึกยิ่งจับคุณลักษณะซับซ้อน (เส้น → รูปทรง → หน้า → วัตถุ) แล้วต่อด้วย Fully Connected ชั้นสุดท้าย</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำระดับมนุษย์ในงานภาพ (จำแนกวัตถุ ตรวจจับใบหน้า)</li>
+        <li>ใช้พารามิเตอร์น้อยกว่า MLP มาก (kernel แชร์กันทั่วภาพ)</li>
+        <li>จับตำแหน่งวัตถุได้แม้ขยับ/หมุนเล็กน้อย (translation invariance)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องใช้ข้อมูลและ GPU เยอะ</li>
+        <li>เป็นกล่องดำ อธิบายยาก (แม้มีเทคนิค visualize)</li>
+        <li>ภาพบิดเบี้ยวหรือมุมมองแปลก ๆ ยังทำพลาดได้</li>
+      </ul>
     </div>
   </section>
 

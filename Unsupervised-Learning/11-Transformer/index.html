@@ -45,6 +45,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -83,40 +87,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">Attention(Q,K,V) = softmax(Q·Kᵀ / √dₖ) · V</div>
-    <ol>
-      <li>แปลงทุกคำให้เป็นเวกเตอร์ (embedding) แล้วสร้าง <b>Query (Q)</b>, <b>Key (K)</b>, <b>Value (V)</b> ด้วยการคูณเมทริกซ์น้ำหนัก</li>
-      <li>คำนวณ <b>score</b> = Q·Kᵀ: คำนี้ "ควรสนใจ" คำอื่นมากแค่ไหน (ห้ามมองคำอนาคตด้วย masking ใน decoder)</li>
-      <li>หารด้วย √dₖ แล้วทำ <b>softmax</b> → กลายเป็นน้ำหนักที่รวมกันเป็น 1</li>
-      <li>คูณกับ <b>V</b> แล้วรวมกัน → คำใหม่ที่ "รู้บริบท" ของทั้งประโยค</li>
-      <li><b>Multi-Head Attention</b>: ทำหลายชุดพร้อมกัน (แต่ละหัวจับความสัมพันธ์ต่างแบบ) + Positional Encoding เพื่อให้รู้ตำแหน่งของคำ</li>
-    </ol>
-    <p class="lead" style="margin-top:12px">เพราะทุกคำคำนวณพร้อมกันได้ (ไม่ต้องรอทีละคำ) Transformer จึงฝึกเร็วกว่า RNN/LSTM มาก และ scale ไปเป็นโมเดลภาษาขนาดยักษ์ได้</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>ประมวลผลขนานกันหมด → ฝึกไวมาก ใช้ข้อมูลมหาศาลได้</li>
-        <li>จับความสัมพันธ์ระยะไกลในข้อความได้ดี (ทั้งประโยค)</li>
-        <li>ใช้ได้หลายงาน: ข้อความ ภาพ เสียง วิดีโอ (multi-modal)</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>หน่วยความจำ O(n²) — ข้อความยาว ๆ เปลืองทรัพยากร</li>
-        <li>ต้องใช้ข้อมูลและ GPU จำนวนมหาศาล</li>
-        <li>ไม่เข้าใจ "โลกจริง" — หลอน (hallucinate) ได้</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">Transformer มีพารามิเตอร์สถาปัตยกรรมที่ต้องสอดคล้องกัน (เช่น head ต้องหาร d_model ลงตัว)</p>
     <div class="param-grid">
       <div class="param-card">
@@ -155,6 +127,38 @@
         <div class="pdesc">ค่อย ๆ เพิ่ม lr จาก 0 แล้วลดแบบโคไซน์</div>
         <div class="ptip">💡 Warmup สำคัญมาก — Transformer ฝึกไม่เสถียรถ้า lr พุ่งทันที</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Attention(Q,K,V) = softmax(Q·Kᵀ / √dₖ) · V</div>
+    <ol>
+      <li>แปลงทุกคำให้เป็นเวกเตอร์ (embedding) แล้วสร้าง <b>Query (Q)</b>, <b>Key (K)</b>, <b>Value (V)</b> ด้วยการคูณเมทริกซ์น้ำหนัก</li>
+      <li>คำนวณ <b>score</b> = Q·Kᵀ: คำนี้ "ควรสนใจ" คำอื่นมากแค่ไหน (ห้ามมองคำอนาคตด้วย masking ใน decoder)</li>
+      <li>หารด้วย √dₖ แล้วทำ <b>softmax</b> → กลายเป็นน้ำหนักที่รวมกันเป็น 1</li>
+      <li>คูณกับ <b>V</b> แล้วรวมกัน → คำใหม่ที่ "รู้บริบท" ของทั้งประโยค</li>
+      <li><b>Multi-Head Attention</b>: ทำหลายชุดพร้อมกัน (แต่ละหัวจับความสัมพันธ์ต่างแบบ) + Positional Encoding เพื่อให้รู้ตำแหน่งของคำ</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">เพราะทุกคำคำนวณพร้อมกันได้ (ไม่ต้องรอทีละคำ) Transformer จึงฝึกเร็วกว่า RNN/LSTM มาก และ scale ไปเป็นโมเดลภาษาขนาดยักษ์ได้</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>ประมวลผลขนานกันหมด → ฝึกไวมาก ใช้ข้อมูลมหาศาลได้</li>
+        <li>จับความสัมพันธ์ระยะไกลในข้อความได้ดี (ทั้งประโยค)</li>
+        <li>ใช้ได้หลายงาน: ข้อความ ภาพ เสียง วิดีโอ (multi-modal)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>หน่วยความจำ O(n²) — ข้อความยาว ๆ เปลืองทรัพยากร</li>
+        <li>ต้องใช้ข้อมูลและ GPU จำนวนมหาศาล</li>
+        <li>ไม่เข้าใจ "โลกจริง" — หลอน (hallucinate) ได้</li>
+      </ul>
     </div>
   </section>
 

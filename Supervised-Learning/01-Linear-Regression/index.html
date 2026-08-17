@@ -40,6 +40,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
   .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
   .tune b{color:#facc15;font-family:Consolas,monospace}
@@ -73,40 +77,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <p class="lead">Linear Regression หาเส้นตรง <b>y = mx + b</b> ที่ทำให้ผลต่างระหว่างค่าจริงกับค่าที่ทำนาย (error) น้อยที่สุด โดยใช้วิธี <b>Least Squares</b> (กำลังสองน้อยที่สุด)</p>
-    <div class="formula">error = Σ (yᵢ − ŷᵢ)²&nbsp;&nbsp;โดยที่&nbsp;&nbsp;ŷᵢ = m·xᵢ + b</div>
-    <ol>
-      <li>สมมติให้ความสัมพันธ์เป็นเส้นตรง: <b>y = mx + b</b></li>
-      <li>คำนวณ error ของทุกจุด = ระยะห่างแนวตั้งยกกำลังสอง</li>
-      <li>ปรับค่า <b>m</b> และ <b>b</b> ให้ error รวมน้อยที่สุด (จุดต่ำสุดของฟังก์ชัน error)</li>
-      <li>ได้เส้นตรงที่ฟิตข้อมูลได้ดีที่สุด — ใช้ทำนายค่า y ใหม่จากค่า x ใด ๆ</li>
-    </ol>
-    <p class="lead" style="margin-top:12px"><b>R² (Coefficient of Determination)</b> วัดว่าโมเดลอธิบายความแปรปรวนของข้อมูลได้ดีแค่ไหน — ค่าใกล้ 1 = ฟิตดีมาก, ค่าใกล้ 0 = แทบไม่ดี</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>เข้าใจง่ายและรวดเร็วในการคำนวณ</li>
-        <li>ผลลัพธ์ตีความได้ (ค่าสัมประสิทธิ์บอกน้ำหนักของแต่ละตัวแปร)</li>
-        <li>เหมาะกับข้อมูลขนาดใหญ่และมีความสัมพันธ์เชิงเส้น</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>สมมติว่าความสัมพันธ์เป็นเส้นตรง — ข้อมูลจริงมักซับซ้อนกว่า</li>
-        <li>ไวต่อค่าผิดปกติ (outlier) มาก</li>
-        <li>มีสมมติฐานเรื่องการกระจายตัวของ error (normality, homoscedasticity)</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">ถึงแม้ Linear Regression จะคำนวณปิด (closed-form) แต่ยังมีพารามิเตอร์ให้ปรับเพื่อเพิ่มความแม่นยำและลด overfit</p>
     <div class="tune-grid">
       <label class="tune">ความชัน m
@@ -151,6 +123,38 @@
         <div class="pdesc">เฉพาะเมื่อใช้ SGDRegressor แทน closed-form</div>
         <div class="ptip">💡 ใหญ่ → เร็วแต่เสี่ยง oscillation · เล็ก → ช้าแต่แม่น</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <p class="lead">Linear Regression หาเส้นตรง <b>y = mx + b</b> ที่ทำให้ผลต่างระหว่างค่าจริงกับค่าที่ทำนาย (error) น้อยที่สุด โดยใช้วิธี <b>Least Squares</b> (กำลังสองน้อยที่สุด)</p>
+    <div class="formula">error = Σ (yᵢ − ŷᵢ)²&nbsp;&nbsp;โดยที่&nbsp;&nbsp;ŷᵢ = m·xᵢ + b</div>
+    <ol>
+      <li>สมมติให้ความสัมพันธ์เป็นเส้นตรง: <b>y = mx + b</b></li>
+      <li>คำนวณ error ของทุกจุด = ระยะห่างแนวตั้งยกกำลังสอง</li>
+      <li>ปรับค่า <b>m</b> และ <b>b</b> ให้ error รวมน้อยที่สุด (จุดต่ำสุดของฟังก์ชัน error)</li>
+      <li>ได้เส้นตรงที่ฟิตข้อมูลได้ดีที่สุด — ใช้ทำนายค่า y ใหม่จากค่า x ใด ๆ</li>
+    </ol>
+    <p class="lead" style="margin-top:12px"><b>R² (Coefficient of Determination)</b> วัดว่าโมเดลอธิบายความแปรปรวนของข้อมูลได้ดีแค่ไหน — ค่าใกล้ 1 = ฟิตดีมาก, ค่าใกล้ 0 = แทบไม่ดี</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>เข้าใจง่ายและรวดเร็วในการคำนวณ</li>
+        <li>ผลลัพธ์ตีความได้ (ค่าสัมประสิทธิ์บอกน้ำหนักของแต่ละตัวแปร)</li>
+        <li>เหมาะกับข้อมูลขนาดใหญ่และมีความสัมพันธ์เชิงเส้น</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>สมมติว่าความสัมพันธ์เป็นเส้นตรง — ข้อมูลจริงมักซับซ้อนกว่า</li>
+        <li>ไวต่อค่าผิดปกติ (outlier) มาก</li>
+        <li>มีสมมติฐานเรื่องการกระจายตัวของ error (normality, homoscedasticity)</li>
+      </ul>
     </div>
   </section>
 

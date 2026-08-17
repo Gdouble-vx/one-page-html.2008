@@ -42,6 +42,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
   .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
   .tune b{color:#facc15;font-family:Consolas,monospace}
@@ -80,40 +84,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <p class="lead">แทนที่จะทำนายค่าตรง ๆ Logistic Regression คำนวณ <b>ความน่าจะเป็น</b> ผ่านฟังก์ชัน Sigmoid ซึ่งบีบผลลัพธ์ให้อยู่ในช่วง 0–1 เสมอ</p>
-    <div class="formula">z = w₁x₁ + w₂x₂ + b&nbsp;&nbsp;&nbsp;ŷ = σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
-    <ol>
-      <li>คำนวณผลรวมถ่วงน้ำหนัก <b>z</b> จาก features ทั้งหมด (เหมือน Linear Regression)</li>
-      <li>ส่ง <b>z</b> เข้าฟังก์ชัน <b>Sigmoid</b> → ได้ค่าความน่าจะเป็นระหว่าง 0 ถึง 1</li>
-      <li>ถ้า ŷ ≥ 0.5 ทำนายเป็น class 1, ถ้า &lt; 0.5 ทำนายเป็น class 0</li>
-      <li>ฝึกด้วย <b>Binary Cross-Entropy Loss</b> + ปรับน้ำหนักด้วย Gradient Descent</li>
-    </ol>
-    <p class="lead" style="margin-top:12px">จุดตัดของเส้นแบ่งคือตำแหน่งที่ σ(z) = 0.5 หรือ z = 0 — ด้านหนึ่งของเส้นเป็น class 0 อีกด้านเป็น class 1</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>ให้ความน่าจะเป็น ไม่ใช่แค่คำตอบ — นำไปใช้ตัดสินใจต่อได้</li>
-        <li>เร็ว ฝึกง่าย เหมาะกับข้อมูลขนาดใหญ่</li>
-        <li>ตีความได้: ค่าสัมประสิทธิ์บอกทิศทางและขนาดของผลต่อ class</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>เส้นแบ่งเป็นเส้นตรง — ไม่เหมาะกับข้อมูลที่ซับซ้อนแบบ non-linear</li>
-        <li>ไวต่อ multicollinearity (ตัวแปรมีความสัมพันธ์กันเองสูง)</li>
-        <li>ถ้าข้อมูลสอง class แยกกันชัดเจนมาก น้ำหนักอาจพองโต (ถ้าไม่มี regularization)</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">พารามิเตอร์หลักของ Logistic Regression — ฝึกในหน้านี้ใช้ lr=0.1, 600 epochs</p>
     <div class="tune-grid">
       <label class="tune">Learning rate (lr)
@@ -151,6 +123,38 @@
         <div class="pdesc">เพิ่มน้ำหนักให้ class ที่มีจำนวนน้อย</div>
         <div class="ptip">💡 สำคัญมากกับข้อมูล เช่น การตรวจจับการฉ้อโกง</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <p class="lead">แทนที่จะทำนายค่าตรง ๆ Logistic Regression คำนวณ <b>ความน่าจะเป็น</b> ผ่านฟังก์ชัน Sigmoid ซึ่งบีบผลลัพธ์ให้อยู่ในช่วง 0–1 เสมอ</p>
+    <div class="formula">z = w₁x₁ + w₂x₂ + b&nbsp;&nbsp;&nbsp;ŷ = σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
+    <ol>
+      <li>คำนวณผลรวมถ่วงน้ำหนัก <b>z</b> จาก features ทั้งหมด (เหมือน Linear Regression)</li>
+      <li>ส่ง <b>z</b> เข้าฟังก์ชัน <b>Sigmoid</b> → ได้ค่าความน่าจะเป็นระหว่าง 0 ถึง 1</li>
+      <li>ถ้า ŷ ≥ 0.5 ทำนายเป็น class 1, ถ้า &lt; 0.5 ทำนายเป็น class 0</li>
+      <li>ฝึกด้วย <b>Binary Cross-Entropy Loss</b> + ปรับน้ำหนักด้วย Gradient Descent</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">จุดตัดของเส้นแบ่งคือตำแหน่งที่ σ(z) = 0.5 หรือ z = 0 — ด้านหนึ่งของเส้นเป็น class 0 อีกด้านเป็น class 1</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>ให้ความน่าจะเป็น ไม่ใช่แค่คำตอบ — นำไปใช้ตัดสินใจต่อได้</li>
+        <li>เร็ว ฝึกง่าย เหมาะกับข้อมูลขนาดใหญ่</li>
+        <li>ตีความได้: ค่าสัมประสิทธิ์บอกทิศทางและขนาดของผลต่อ class</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>เส้นแบ่งเป็นเส้นตรง — ไม่เหมาะกับข้อมูลที่ซับซ้อนแบบ non-linear</li>
+        <li>ไวต่อ multicollinearity (ตัวแปรมีความสัมพันธ์กันเองสูง)</li>
+        <li>ถ้าข้อมูลสอง class แยกกันชัดเจนมาก น้ำหนักอาจพองโต (ถ้าไม่มี regularization)</li>
+      </ul>
     </div>
   </section>
 

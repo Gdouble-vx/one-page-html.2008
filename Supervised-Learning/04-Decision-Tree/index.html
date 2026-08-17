@@ -46,6 +46,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
   .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
   .tune b{color:#facc15;font-family:Consolas,monospace}
@@ -84,38 +88,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">Gini(t) = 1 − Σ pᵢ²&nbsp;&nbsp;·&nbsp;&nbsp;เลือก split ที่ลด Gini Impurity ได้มากที่สุด</div>
-    <ol>
-      <li>ที่แต่ละโหนด ค้นหา <b>feature + ค่า threshold</b> ที่แบ่งข้อมูลออกเป็น 2 กลุ่มได้ "บริสุทธิ์" ที่สุด (Gini ต่ำสุด)</li>
-      <li>แบ่งข้อมูลตามเงื่อนไข เช่น <b>อายุ &lt; 30 → ไปซ้าย, อย่างอื่น → ไปขวา</b></li>
-      <li>ทำซ้ำในแต่ละกลุ่มย่อย (แบบ recursive) จนกว่าจะบริสุทธิ์หรือถึงความลึกที่กำหนด</li>
-      <li>โหนดปลาย (leaf) คือคำตอบสุดท้าย — class ที่มีเสียงข้างมากในกลุ่มนั้น</li>
-    </ol>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>มนุษย์อ่านและอธิบายผลลัพธ์ได้ (interpretable)</li>
-        <li>ไม่ต้องปรับขนาดข้อมูล (scaling) มากนัก</li>
-        <li>จับความสัมพันธ์แบบ non-linear ได้</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ถ้าลึกเกินไป → overfit ได้ง่ายมาก (จำข้อมูลฝึกทั้งชุด)</li>
-        <li>ไม่เสถียร: ข้อมูลเปลี่ยนนิดเดียว ต้นไม้อาจเปลี่ยนทั้งต้น</li>
-        <li>เส้นแบ่งเป็นแนวตั้ง/แนวนอนเท่านั้น (axis-aligned)</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">พารามิเตอร์ที่ควบคุมการเติบโตของต้นไม้ — ปรับเพื่อสมดุลระหว่าง underfit กับ overfit</p>
     <div class="tune-grid">
       <label class="tune">max_depth (ความลึก)
@@ -155,6 +129,36 @@
         <div class="pdesc">สุ่มเลือก feature จำนวนจำกัดตอนแบ่งแต่ละโหนด</div>
         <div class="ptip">💡 ลดลง → ต้นไม้แต่ละต้นต่างกันมากขึ้น (ดีตอน ensemble)</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Gini(t) = 1 − Σ pᵢ²&nbsp;&nbsp;·&nbsp;&nbsp;เลือก split ที่ลด Gini Impurity ได้มากที่สุด</div>
+    <ol>
+      <li>ที่แต่ละโหนด ค้นหา <b>feature + ค่า threshold</b> ที่แบ่งข้อมูลออกเป็น 2 กลุ่มได้ "บริสุทธิ์" ที่สุด (Gini ต่ำสุด)</li>
+      <li>แบ่งข้อมูลตามเงื่อนไข เช่น <b>อายุ &lt; 30 → ไปซ้าย, อย่างอื่น → ไปขวา</b></li>
+      <li>ทำซ้ำในแต่ละกลุ่มย่อย (แบบ recursive) จนกว่าจะบริสุทธิ์หรือถึงความลึกที่กำหนด</li>
+      <li>โหนดปลาย (leaf) คือคำตอบสุดท้าย — class ที่มีเสียงข้างมากในกลุ่มนั้น</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>มนุษย์อ่านและอธิบายผลลัพธ์ได้ (interpretable)</li>
+        <li>ไม่ต้องปรับขนาดข้อมูล (scaling) มากนัก</li>
+        <li>จับความสัมพันธ์แบบ non-linear ได้</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ถ้าลึกเกินไป → overfit ได้ง่ายมาก (จำข้อมูลฝึกทั้งชุด)</li>
+        <li>ไม่เสถียร: ข้อมูลเปลี่ยนนิดเดียว ต้นไม้อาจเปลี่ยนทั้งต้น</li>
+        <li>เส้นแบ่งเป็นแนวตั้ง/แนวนอนเท่านั้น (axis-aligned)</li>
+      </ul>
     </div>
   </section>
 

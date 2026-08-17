@@ -44,6 +44,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
   .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
   .tune b{color:#facc15;font-family:Consolas,monospace}
@@ -82,39 +86,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">h = ReLU(W₁x + b₁)&nbsp;&nbsp;&nbsp;ŷ = σ(W₂h + b₂)</div>
-    <ol>
-      <li><b>Forward pass:</b> ข้อมูลไหลจาก input layer → hidden layers → output layer โดยแต่ละเซลล์คำนวณ <b>ผลรวมถ่วงน้ำหนัก + activation function</b></li>
-      <li><b>Activation:</b> ReLU, Sigmoid, Tanh — เพิ่มความ "ไม่เป็นเส้นตรง" ให้โครงข่ายเรียนรู้รูปทรงซับซ้อนได้</li>
-      <li><b>Loss:</b> เปรียบเทียบคำตอบที่ทำนายกับคำตอบจริง (เช่น Cross-Entropy)</li>
-      <li><b>Backpropagation:</b> คำนวณว่าการเปลี่ยนน้ำหนักแต่ละตัวทำให้ loss เพิ่ม/ลดแค่ไหน (gradient) แล้วปรับน้ำหนักให้ loss ลดลง (Gradient Descent)</li>
-      <li>ทำซ้ำหลายพันรอบจน loss ต่ำ — น้ำหนักที่ได้คือ "ความรู้" ของโมเดล</li>
-    </ol>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>Universal approximator — เรียนรู้ฟังก์ชันใดก็ได้ถ้ามีชั้นเพียงพอ</li>
-        <li>ใช้กับได้ทุกอย่าง: ตัวเลข, ภาพ, ข้อความ, เสียง</li>
-        <li>เป็นพื้นฐานของ deep learning ทั้งหมด</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ต้องใช้ข้อมูลจำนวนมากและพลังคำนวณสูง</li>
-        <li>เป็น "กล่องดำ" — อธิบายว่าทำไมถึงตัดสินใจแบบนั้นยาก</li>
-        <li>ต้องปรับ hyperparameter หลายตัว (layer, neuron, learning rate)</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">MLP มีพารามิเตอร์เยอะที่สุด — เริ่มจากโครงสร้างเล็ก ๆ แล้วค่อยเพิ่ม (หน้านี้ใช้ 2 hidden nodes)</p>
     <div class="tune-grid">
       <label class="tune">Learning rate (lr)
@@ -160,6 +133,37 @@
         <div class="pdesc">เทคนิคลด overfit</div>
         <div class="ptip">💡 ใช้เมื่อ validation error สูงกว่าชุดฝึกมาก</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">h = ReLU(W₁x + b₁)&nbsp;&nbsp;&nbsp;ŷ = σ(W₂h + b₂)</div>
+    <ol>
+      <li><b>Forward pass:</b> ข้อมูลไหลจาก input layer → hidden layers → output layer โดยแต่ละเซลล์คำนวณ <b>ผลรวมถ่วงน้ำหนัก + activation function</b></li>
+      <li><b>Activation:</b> ReLU, Sigmoid, Tanh — เพิ่มความ "ไม่เป็นเส้นตรง" ให้โครงข่ายเรียนรู้รูปทรงซับซ้อนได้</li>
+      <li><b>Loss:</b> เปรียบเทียบคำตอบที่ทำนายกับคำตอบจริง (เช่น Cross-Entropy)</li>
+      <li><b>Backpropagation:</b> คำนวณว่าการเปลี่ยนน้ำหนักแต่ละตัวทำให้ loss เพิ่ม/ลดแค่ไหน (gradient) แล้วปรับน้ำหนักให้ loss ลดลง (Gradient Descent)</li>
+      <li>ทำซ้ำหลายพันรอบจน loss ต่ำ — น้ำหนักที่ได้คือ "ความรู้" ของโมเดล</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>Universal approximator — เรียนรู้ฟังก์ชันใดก็ได้ถ้ามีชั้นเพียงพอ</li>
+        <li>ใช้กับได้ทุกอย่าง: ตัวเลข, ภาพ, ข้อความ, เสียง</li>
+        <li>เป็นพื้นฐานของ deep learning ทั้งหมด</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องใช้ข้อมูลจำนวนมากและพลังคำนวณสูง</li>
+        <li>เป็น "กล่องดำ" — อธิบายว่าทำไมถึงตัดสินใจแบบนั้นยาก</li>
+        <li>ต้องปรับ hyperparameter หลายตัว (layer, neuron, learning rate)</li>
+      </ul>
     </div>
   </section>
 

@@ -42,6 +42,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -69,39 +73,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">minimize&nbsp; ½‖w‖² + C·Σ max(0, 1 − yᵢ(w·xᵢ + b))&nbsp;&nbsp;&nbsp;(Hinge Loss)</div>
-    <ol>
-      <li>หาเส้นแบ่ง <b>w·x + b = 0</b> ที่แยกสอง class ออกจากกัน</li>
-      <li>ไม่ใช่แค่แยกได้ — ต้องแยกให้ <b>margin (ระยะถึงจุดที่ใกล้ที่สุด)</b> กว้างที่สุดด้วย</li>
-      <li>จุดข้อมูลที่อยู่บนขอบ margin พอดีเรียกว่า <b>Support Vectors</b> — มีแค่จุดเหล่านี้เท่านั้นที่กำหนดเส้นแบ่ง</li>
-      <li>ถ้าข้อมูลไม่ separable ใช้ค่า <b>C</b> ควบคุมการยอมให้ผิดบ้าง (soft margin)</li>
-    </ol>
-    <p class="lead" style="margin-top:12px"><b>Kernel trick:</b> ถ้าข้อมูลไม่แยกด้วยเส้นตรง ให้ "ย้าย" ข้อมูลไปมิติที่สูงขึ้น (เช่น RBF kernel) แล้วหาเส้นแบ่งในมิตินั้น — ทำให้ SVM จับรูปทรงโค้งได้โดยไม่ต้องคำนวณมิติสูงจริง ๆ</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>แม่นยำสูงโดยเฉพาะข้อมูลมิติสูง (เช่น ภาพ)</li>
-        <li>ใช้หน่วยความจำน้อย — จำแค่ support vectors ไม่ใช่ทุกจุด</li>
-        <li>Kernel trick ทำให้จับความสัมพันธ์ซับซ้อนได้</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ไม่เหมาะกับข้อมูลขนาดใหญ่ (ฝึกช้า)</li>
-        <li>ต้องปรับพารามิเตอร์ (C, kernel, gamma) หลายตัว</li>
-        <li>ผลลัพธ์ตีความยาก และอ่อนไหวต่อการเลือก kernel</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">หัวใจของ SVM คือคู่ (C, kernel, gamma) — ต้องปรับด้วยกัน ใช้ GridSearch เป็นหลัก</p>
     <div class="param-grid">
       <div class="param-card">
@@ -134,6 +107,37 @@
         <div class="pdesc">ชดเชย class ที่มีตัวอย่างน้อย</div>
         <div class="ptip">💡 ใช้กับข้อมูล เช่น เซ็ตการตรวจจับของหายาก</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">minimize&nbsp; ½‖w‖² + C·Σ max(0, 1 − yᵢ(w·xᵢ + b))&nbsp;&nbsp;&nbsp;(Hinge Loss)</div>
+    <ol>
+      <li>หาเส้นแบ่ง <b>w·x + b = 0</b> ที่แยกสอง class ออกจากกัน</li>
+      <li>ไม่ใช่แค่แยกได้ — ต้องแยกให้ <b>margin (ระยะถึงจุดที่ใกล้ที่สุด)</b> กว้างที่สุดด้วย</li>
+      <li>จุดข้อมูลที่อยู่บนขอบ margin พอดีเรียกว่า <b>Support Vectors</b> — มีแค่จุดเหล่านี้เท่านั้นที่กำหนดเส้นแบ่ง</li>
+      <li>ถ้าข้อมูลไม่ separable ใช้ค่า <b>C</b> ควบคุมการยอมให้ผิดบ้าง (soft margin)</li>
+    </ol>
+    <p class="lead" style="margin-top:12px"><b>Kernel trick:</b> ถ้าข้อมูลไม่แยกด้วยเส้นตรง ให้ "ย้าย" ข้อมูลไปมิติที่สูงขึ้น (เช่น RBF kernel) แล้วหาเส้นแบ่งในมิตินั้น — ทำให้ SVM จับรูปทรงโค้งได้โดยไม่ต้องคำนวณมิติสูงจริง ๆ</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำสูงโดยเฉพาะข้อมูลมิติสูง (เช่น ภาพ)</li>
+        <li>ใช้หน่วยความจำน้อย — จำแค่ support vectors ไม่ใช่ทุกจุด</li>
+        <li>Kernel trick ทำให้จับความสัมพันธ์ซับซ้อนได้</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ไม่เหมาะกับข้อมูลขนาดใหญ่ (ฝึกช้า)</li>
+        <li>ต้องปรับพารามิเตอร์ (C, kernel, gamma) หลายตัว</li>
+        <li>ผลลัพธ์ตีความยาก และอ่อนไหวต่อการเลือก kernel</li>
+      </ul>
     </div>
   </section>
 

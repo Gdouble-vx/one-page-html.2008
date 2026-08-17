@@ -43,6 +43,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:13px}
 </style>
@@ -75,39 +79,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">SSE = Σ<sub>i</sub> Σ<sub>x∈Cᵢ</sub> ‖x − μᵢ‖²&nbsp;&nbsp;&nbsp;(หาค่าที่น้อยที่สุด)</div>
-    <ol>
-      <li><b>Initialize:</b> สุ่มตำแหน่ง centroid เริ่มต้น k จุด</li>
-      <li><b>Assign (E-step):</b> จับคู่ทุกจุดเข้ากลุ่มของ centroid ที่อยู่ใกล้ที่สุด</li>
-      <li><b>Update (M-step):</b> ย้าย centroid ไปที่จุดศูนย์กลาง (ค่าเฉลี่ย) ของสมาชิกในกลุ่ม</li>
-      <li>ทำซ้ำขั้น 2–3 จน centroid ไม่ขยับแล้ว (converge)</li>
-    </ol>
-    <p class="lead" style="margin-top:12px">ผลลัพธ์ขึ้นกับตำแหน่งเริ่มต้น และต้องเลือก <b>k</b> ล่วงหน้า — ลองเปลี่ยน k แล้วดูว่า clustering เปลี่ยนไปยังไงครับ</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>เร็วมาก เหมาะกับข้อมูลขนาดใหญ่</li>
-        <li>ง่ายต่อการเข้าใจและ implement</li>
-        <li>ได้ผลดีกับกลุ่มที่มีรูปร่างกลมและขนาดใกล้เคียงกัน</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ต้องระบุ k ล่วงหน้า (ผิดพลาดง่าย)</li>
-        <li>ไวต่อตำแหน่ง centroid เริ่มต้นและ outlier</li>
-        <li>จับกลุ่มรูปทรงแปลก ๆ ไม่ได้ (เช่น รูปจันทร์เสี้ยว)</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">K-Means มีพารามิเตอร์ไม่กี่ตัว แต่การเลือก k คือการตัดสินใจที่สำคัญที่สุด (หน้านี้ลองเปลี่ยน k ผ่าน slider ได้)</p>
     <div class="param-grid">
       <div class="param-card">
@@ -140,6 +113,37 @@
         <div class="pdesc">ระยะทาง Euclidean ไวต่อขนาดของ feature</div>
         <div class="ptip">💡 ไม่ scaling = feature หน่วยใหญ่กลบทุกอย่าง</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">SSE = Σ<sub>i</sub> Σ<sub>x∈Cᵢ</sub> ‖x − μᵢ‖²&nbsp;&nbsp;&nbsp;(หาค่าที่น้อยที่สุด)</div>
+    <ol>
+      <li><b>Initialize:</b> สุ่มตำแหน่ง centroid เริ่มต้น k จุด</li>
+      <li><b>Assign (E-step):</b> จับคู่ทุกจุดเข้ากลุ่มของ centroid ที่อยู่ใกล้ที่สุด</li>
+      <li><b>Update (M-step):</b> ย้าย centroid ไปที่จุดศูนย์กลาง (ค่าเฉลี่ย) ของสมาชิกในกลุ่ม</li>
+      <li>ทำซ้ำขั้น 2–3 จน centroid ไม่ขยับแล้ว (converge)</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">ผลลัพธ์ขึ้นกับตำแหน่งเริ่มต้น และต้องเลือก <b>k</b> ล่วงหน้า — ลองเปลี่ยน k แล้วดูว่า clustering เปลี่ยนไปยังไงครับ</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>เร็วมาก เหมาะกับข้อมูลขนาดใหญ่</li>
+        <li>ง่ายต่อการเข้าใจและ implement</li>
+        <li>ได้ผลดีกับกลุ่มที่มีรูปร่างกลมและขนาดใกล้เคียงกัน</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องระบุ k ล่วงหน้า (ผิดพลาดง่าย)</li>
+        <li>ไวต่อตำแหน่ง centroid เริ่มต้นและ outlier</li>
+        <li>จับกลุ่มรูปทรงแปลก ๆ ไม่ได้ (เช่น รูปจันทร์เสี้ยว)</li>
+      </ul>
     </div>
   </section>
 

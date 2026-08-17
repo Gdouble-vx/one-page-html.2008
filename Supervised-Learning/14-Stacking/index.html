@@ -45,6 +45,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -78,39 +82,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">ขั้นที่ 1: p₁, p₂, p₃ = base₁(x), base₂(x), base₃(x)&nbsp;&nbsp;·&nbsp;&nbsp;ขั้นที่ 2: ŷ = meta(p₁, p₂, p₃)</div>
-    <ol>
-      <li><b>Level-0 (Base models):</b> ฝึกโมเดลหลายแบบ เช่น Logistic Regression, kNN, Decision Tree บนข้อมูลเดียวกัน</li>
-      <li>ให้แต่ละโมเดลทำนายบนข้อมูลฝึก → สร้างชุดข้อมูลใหม่จากคำทำนายเหล่านี้ (เรียกว่า <b>meta-features</b>)</li>
-      <li><b>Level-1 (Meta-model):</b> ฝึกโมเดลอีกตัว (เช่น Logistic Regression) บน meta-features เพื่อเรียนรู้ว่า "โมเดลไหนเก่งตรงไหน ควรเชื่อใครมากน้อยแค่ไหน"</li>
-      <li>เวลาทำนายข้อมูลใหม่: ให้ base models ทำนายก่อน → ส่งคำทำนายเข้าสู่ meta-model → ได้คำตอบสุดท้าย</li>
-    </ol>
-    <p class="lead" style="margin-top:12px">⚠️ ควรทำ <b>cross-validation</b> ตอนสร้าง meta-features เพื่อไม่ให้ meta-model เรียนรู้ว่า base models "จำข้อมูลฝึกได้" แทนที่จะเก่งจริง</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>แม่นยำสูงกว่าการใช้โมเดลเดียวหรือ voting ทั่วไป</li>
-        <li>ใช้จุดแข็งของโมเดลหลายประเภทพร้อมกัน</li>
-        <li>ชนะการแข่งขัน ML หลายรายการ (เช่น Netflix Prize)</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ช้าและใช้ทรัพยากรหลายเท่า (ต้องฝึกหลายโมเดล)</li>
-        <li>เสี่ยงต่อ data leakage ถ้าไม่ทำ cross-validation</li>
-        <li>ซับซ้อน ดีบักและอธิบายยาก</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">Stacking tuning ต่างจากโมเดลเดียว — เน้นที่ความหลากหลายของ base models และวิธีสร้าง meta-features</p>
     <div class="param-grid">
       <div class="param-card">
@@ -143,6 +116,37 @@
         <div class="pdesc">แต่ละ base ควรถูก tuned ให้ดีพอสมควรก่อนรวม</div>
         <div class="ptip">💡 ไม่ต้อง perfect — base ที่ overfit เล็กน้อยก็ยังใช้ได้ ถ้าคนละแบบ</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">ขั้นที่ 1: p₁, p₂, p₃ = base₁(x), base₂(x), base₃(x)&nbsp;&nbsp;·&nbsp;&nbsp;ขั้นที่ 2: ŷ = meta(p₁, p₂, p₃)</div>
+    <ol>
+      <li><b>Level-0 (Base models):</b> ฝึกโมเดลหลายแบบ เช่น Logistic Regression, kNN, Decision Tree บนข้อมูลเดียวกัน</li>
+      <li>ให้แต่ละโมเดลทำนายบนข้อมูลฝึก → สร้างชุดข้อมูลใหม่จากคำทำนายเหล่านี้ (เรียกว่า <b>meta-features</b>)</li>
+      <li><b>Level-1 (Meta-model):</b> ฝึกโมเดลอีกตัว (เช่น Logistic Regression) บน meta-features เพื่อเรียนรู้ว่า "โมเดลไหนเก่งตรงไหน ควรเชื่อใครมากน้อยแค่ไหน"</li>
+      <li>เวลาทำนายข้อมูลใหม่: ให้ base models ทำนายก่อน → ส่งคำทำนายเข้าสู่ meta-model → ได้คำตอบสุดท้าย</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">⚠️ ควรทำ <b>cross-validation</b> ตอนสร้าง meta-features เพื่อไม่ให้ meta-model เรียนรู้ว่า base models "จำข้อมูลฝึกได้" แทนที่จะเก่งจริง</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำสูงกว่าการใช้โมเดลเดียวหรือ voting ทั่วไป</li>
+        <li>ใช้จุดแข็งของโมเดลหลายประเภทพร้อมกัน</li>
+        <li>ชนะการแข่งขัน ML หลายรายการ (เช่น Netflix Prize)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ช้าและใช้ทรัพยากรหลายเท่า (ต้องฝึกหลายโมเดล)</li>
+        <li>เสี่ยงต่อ data leakage ถ้าไม่ทำ cross-validation</li>
+        <li>ซับซ้อน ดีบักและอธิบายยาก</li>
+      </ul>
     </div>
   </section>
 

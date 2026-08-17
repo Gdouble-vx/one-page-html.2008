@@ -42,6 +42,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
   .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
   .tune b{color:#facc15;font-family:Consolas,monospace}
@@ -84,39 +88,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">Q(s,a) ← Q(s,a) + α [ r + γ·max Q(s′,a′) − Q(s,a) ]&nbsp;&nbsp;&nbsp;(Bellman equation)</div>
-    <ol>
-      <li><b>State (s) & Action (a):</b> ตำแหน่งของเอเจนต์ และการเคลื่อนที่ 4 ทิศทาง</li>
-      <li><b>Reward (r):</b> ถึงเป้าหมาย = <b>+10</b>, ชนกำแพง = <b>−1</b>, เดินปกติ = <b>−0.04</b> (กดดันให้ถึงเป้าไว)</li>
-      <li><b>Q-table:</b> ตารางเก็บ "ความคุ้มค่า" ของการทำ action แต่ละอย่างในแต่ละ state — เริ่มต้นเป็น 0 (ไม่รู้อะไร)</li>
-      <li><b>Exploration vs Exploitation:</b> ช่วงแรกสุ่มเดินเยอะ (ε สูง) เพื่อสำรวจ พอเรียนรู้ไป ε ลดลง หันมาเลือก action ที่ Q สูงสุด</li>
-      <li>ทุกก้าว อัปเดต Q ด้วย Bellman equation — ค่าดี ๆ แผ่ย้อนกลับไปยัง state ก่อนหน้าเรื่อย ๆ จนเอเจนต์รู้ทางลัดที่สั้นที่สุด</li>
-    </ol>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>เรียนรู้ได้โดยไม่ต้องมีข้อมูล label — แค่รางวัล</li>
-        <li>เก่งกว่ามนุษย์ในเกมบางเกม (Go, Chess, Dota 2)</li>
-        <li>ใช้ได้กับระบบที่ต้องตัดสินใจต่อเนื่อง</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ต้องลองผิดลองถูกมาก — ข้อมูล/เวลา/พลังงานมหาศาล</li>
-        <li>ออกแบบ reward function ยาก (reward hacking)</li>
-        <li>ไม่เสถียร — ใช้ในโลกจริง (เช่น หุ่นยนต์) เสี่ยงอันตราย</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">Q-Learning พึ่งพาพารามิเตอร์ไม่กี่ตัว + การออกแบบรางวัล (reward)</p>
     <div class="tune-grid">
       <label class="tune">α (learning rate)
@@ -168,6 +141,37 @@
         <div class="pdesc">การให้รางวัล — หัวใจของ RL ที่คนมองข้าม</div>
         <div class="ptip">💡 ลงโทษเล็กน้อยต่อก้าว → เอเจนต์หาทางที่สั้นที่สุด · ระวัง reward hacking</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">Q(s,a) ← Q(s,a) + α [ r + γ·max Q(s′,a′) − Q(s,a) ]&nbsp;&nbsp;&nbsp;(Bellman equation)</div>
+    <ol>
+      <li><b>State (s) & Action (a):</b> ตำแหน่งของเอเจนต์ และการเคลื่อนที่ 4 ทิศทาง</li>
+      <li><b>Reward (r):</b> ถึงเป้าหมาย = <b>+10</b>, ชนกำแพง = <b>−1</b>, เดินปกติ = <b>−0.04</b> (กดดันให้ถึงเป้าไว)</li>
+      <li><b>Q-table:</b> ตารางเก็บ "ความคุ้มค่า" ของการทำ action แต่ละอย่างในแต่ละ state — เริ่มต้นเป็น 0 (ไม่รู้อะไร)</li>
+      <li><b>Exploration vs Exploitation:</b> ช่วงแรกสุ่มเดินเยอะ (ε สูง) เพื่อสำรวจ พอเรียนรู้ไป ε ลดลง หันมาเลือก action ที่ Q สูงสุด</li>
+      <li>ทุกก้าว อัปเดต Q ด้วย Bellman equation — ค่าดี ๆ แผ่ย้อนกลับไปยัง state ก่อนหน้าเรื่อย ๆ จนเอเจนต์รู้ทางลัดที่สั้นที่สุด</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>เรียนรู้ได้โดยไม่ต้องมีข้อมูล label — แค่รางวัล</li>
+        <li>เก่งกว่ามนุษย์ในเกมบางเกม (Go, Chess, Dota 2)</li>
+        <li>ใช้ได้กับระบบที่ต้องตัดสินใจต่อเนื่อง</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ต้องลองผิดลองถูกมาก — ข้อมูล/เวลา/พลังงานมหาศาล</li>
+        <li>ออกแบบ reward function ยาก (reward hacking)</li>
+        <li>ไม่เสถียร — ใช้ในโลกจริง (เช่น หุ่นยนต์) เสี่ยงอันตราย</li>
+      </ul>
     </div>
   </section>
 

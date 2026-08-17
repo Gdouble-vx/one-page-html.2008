@@ -46,6 +46,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -81,39 +85,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">f = σ(Wf·[hₜ₋₁,xₜ]+bf)&nbsp;&nbsp;i = σ(Wi·…)&nbsp;&nbsp;c̃ = tanh(Wc·…)&nbsp;&nbsp;cₜ = f·cₜ₋₁ + i·c̃&nbsp;&nbsp;o = σ(Wo·…)&nbsp;&nbsp;hₜ = o·tanh(cₜ)</div>
-    <ol>
-      <li><b>Forget gate (f):</b> ตัดสินใจว่า "ความจำเดิม" ส่วนไหนควรลืม (ค่า 0 = ลืม, 1 = จำไว้)</li>
-      <li><b>Input gate (i) + candidate (c̃):</b> ตัดสินใจว่าข้อมูลใหม่ <b>x</b> ส่วนไหนควรจำ และสร้างค่าผู้สมัครเข้าระบบความจำ</li>
-      <li><b>อัปเดต cell state (c):</b> cₜ = (ความจำเดิมที่ยังเหลือ) + (ข้อมูลใหม่ที่รับเข้ามา)</li>
-      <li><b>Output gate (o):</b> ปล่อยความจำส่วนไหนออกมาเป็น output (hidden state hₜ)</li>
-      <li>ในขณะที่ RNN ทั่วไปมีปัญหา gradient หาย (ลืมอะไรไกล ๆ เร็ว) LSTM ใช้ประตูเหล่านี้ให้ข้อมูลไหลได้ยาวเป็นร้อย ๆ timestep</li>
-    </ol>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>จำข้อมูลระยะยาวได้ดี (ชื่อของมันเลย!)</li>
-        <li>แก้ปัญหา vanishing gradient ของ RNN ทั่วไป</li>
-        <li>เหมาะกับข้อมูลลำดับ: ข้อความ เสียง ราคาหุ้น</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ฝึกช้า — ต้องประมวลผลทีละ timestep (ไม่ขนาน)</li>
-        <li>พารามิเตอร์เยอะ ใช้หน่วยความจำสูง</li>
-        <li>Transformer แซงหน้าในงานภาษาแล้ว (แต่ LSTM ยังใช้ในบางงาน)</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">LSTM ต้องปรับทั้งขนาดโมเดลและรูปแบบข้อมูลลำดับ (sequence) — หน้านี้ใช้หน่วยความจำแบบ fixed-weight</p>
     <div class="param-grid">
       <div class="param-card">
@@ -152,6 +125,37 @@
         <div class="pdesc">จำนวนตัวอย่างต่อรอบอัปเดต</div>
         <div class="ptip">💡 ใหญ่ขึ้น = ฝึกเร็วขึ้น แต่ generalization อาจแย่ลง</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">f = σ(Wf·[hₜ₋₁,xₜ]+bf)&nbsp;&nbsp;i = σ(Wi·…)&nbsp;&nbsp;c̃ = tanh(Wc·…)&nbsp;&nbsp;cₜ = f·cₜ₋₁ + i·c̃&nbsp;&nbsp;o = σ(Wo·…)&nbsp;&nbsp;hₜ = o·tanh(cₜ)</div>
+    <ol>
+      <li><b>Forget gate (f):</b> ตัดสินใจว่า "ความจำเดิม" ส่วนไหนควรลืม (ค่า 0 = ลืม, 1 = จำไว้)</li>
+      <li><b>Input gate (i) + candidate (c̃):</b> ตัดสินใจว่าข้อมูลใหม่ <b>x</b> ส่วนไหนควรจำ และสร้างค่าผู้สมัครเข้าระบบความจำ</li>
+      <li><b>อัปเดต cell state (c):</b> cₜ = (ความจำเดิมที่ยังเหลือ) + (ข้อมูลใหม่ที่รับเข้ามา)</li>
+      <li><b>Output gate (o):</b> ปล่อยความจำส่วนไหนออกมาเป็น output (hidden state hₜ)</li>
+      <li>ในขณะที่ RNN ทั่วไปมีปัญหา gradient หาย (ลืมอะไรไกล ๆ เร็ว) LSTM ใช้ประตูเหล่านี้ให้ข้อมูลไหลได้ยาวเป็นร้อย ๆ timestep</li>
+    </ol>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>จำข้อมูลระยะยาวได้ดี (ชื่อของมันเลย!)</li>
+        <li>แก้ปัญหา vanishing gradient ของ RNN ทั่วไป</li>
+        <li>เหมาะกับข้อมูลลำดับ: ข้อความ เสียง ราคาหุ้น</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ฝึกช้า — ต้องประมวลผลทีละ timestep (ไม่ขนาน)</li>
+        <li>พารามิเตอร์เยอะ ใช้หน่วยความจำสูง</li>
+        <li>Transformer แซงหน้าในงานภาษาแล้ว (แต่ LSTM ยังใช้ในบางงาน)</li>
+      </ul>
     </div>
   </section>
 

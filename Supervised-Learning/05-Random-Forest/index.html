@@ -46,6 +46,10 @@
   .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
   .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
   .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
+  .tune-section{background:linear-gradient(180deg,rgba(56,189,248,.07),rgba(56,189,248,.015));border:1px solid rgba(56,189,248,.22);border-radius:18px;padding:26px;margin-bottom:48px}
+  .tune-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tune-head h2{margin-bottom:0}
+  .tune-badge{font-size:12px;background:rgba(56,189,248,.16);color:#7dd3fc;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
   .tune-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
   .tune{display:flex;flex-direction:column;gap:6px;font-size:13px;background:#111c33;border:1px solid #334155;border-radius:10px;padding:12px 16px}
   .tune b{color:#facc15;font-family:Consolas,monospace}
@@ -78,40 +82,8 @@
     </div>
   </section>
 
-  <section>
-    <h2>🧠 ทำงานอย่างไร</h2>
-    <div class="formula">ผลรวม = vote( ต้น₁ + ต้น₂ + ... + ต้นₙ )&nbsp;&nbsp;·&nbsp;&nbsp;Bagging + Random feature selection</div>
-    <ol>
-      <li><b>Bootstrap sampling:</b> สุ่มหยิบข้อมูลฝึกแบบคืนที่ (sampling with replacement) ให้แต่ละต้นได้ข้อมูลชุดต่างกัน</li>
-      <li><b>Random feature:</b> ในแต่ละ split แต่ละต้นเลือกพิจารณาแค่ subset ของ features แบบสุ่ม</li>
-      <li>ฝึกต้นไม้จำนวนมาก (หลายร้อยต้น) แต่ละต้นไม่สมบูรณ์แบบ — "weak learner"</li>
-      <li>เวลาทำนาย ให้ทุกต้นโหวต แล้วใช้เสียงข้างมากเป็นคำตอบสุดท้าย</li>
-    </ol>
-    <p class="lead" style="margin-top:12px">การสุ่ม 2 อย่างนี้ทำให้แต่ละต้น "ผิดคนละแบบ" เมื่อรวมกันแล้ว error ต่าง ๆ หักล้างกัน → โมเดลรวมแม่นกว่าและไม่ overfit</p>
-  </section>
-
-  <section class="grid">
-    <div class="card pros">
-      <h3>✅ ข้อดี</h3>
-      <ul>
-        <li>แม่นยำสูง ลด overfit จากต้นไม้เดี่ยวได้มาก</li>
-        <li>รับทั้งตัวเลขและหมวดหมู่ ไม่ต้องปรับขนาดข้อมูล</li>
-        <li>วัดความสำคัญของ feature (feature importance) ได้ฟรี</li>
-        <li>เทรนแบบขนานได้ (แต่ละต้นอิสระต่อกัน)</li>
-      </ul>
-    </div>
-    <div class="card cons">
-      <h3>⚠️ ข้อจำกัด</h3>
-      <ul>
-        <li>ช้ากว่าและใช้หน่วยความจำมากกว่าต้นไม้เดี่ยว</li>
-        <li>ตีความผลลัพธ์ยากขึ้น (ยังดีกว่า neural network)</li>
-        <li>อาจ overfit ข้อมูลที่มี noise สูงมาก</li>
-      </ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>⚙️ Parameter Tuning</h2>
+  <section class="tune-section">
+    <div class="tune-head"><h2>⚙️ Parameter Tuning</h2><span class="tune-badge">ปรับค่าแล้วดูผลทันที</span></div>
     <p class="lead">Random Forest ทนทานต่อพารามิเตอร์พอสมควร แต่ปรับตัวนี้แล้วได้ผลดี (หน้านี้ใช้ n_estimators=60)</p>
     <div class="tune-grid">
       <label class="tune">n_estimators (จำนวนต้น)
@@ -151,6 +123,38 @@
         <div class="pdesc">สุ่มหยิบข้อมูลแบบคืนที่ให้แต่ละต้น</div>
         <div class="ptip">💡 False = ใช้ข้อมูลเต็มชุดทุกต้น → ต้นไม้เหมือนกัน → เสียความหลากหลาย</div>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🧠 ทำงานอย่างไร</h2>
+    <div class="formula">ผลรวม = vote( ต้น₁ + ต้น₂ + ... + ต้นₙ )&nbsp;&nbsp;·&nbsp;&nbsp;Bagging + Random feature selection</div>
+    <ol>
+      <li><b>Bootstrap sampling:</b> สุ่มหยิบข้อมูลฝึกแบบคืนที่ (sampling with replacement) ให้แต่ละต้นได้ข้อมูลชุดต่างกัน</li>
+      <li><b>Random feature:</b> ในแต่ละ split แต่ละต้นเลือกพิจารณาแค่ subset ของ features แบบสุ่ม</li>
+      <li>ฝึกต้นไม้จำนวนมาก (หลายร้อยต้น) แต่ละต้นไม่สมบูรณ์แบบ — "weak learner"</li>
+      <li>เวลาทำนาย ให้ทุกต้นโหวต แล้วใช้เสียงข้างมากเป็นคำตอบสุดท้าย</li>
+    </ol>
+    <p class="lead" style="margin-top:12px">การสุ่ม 2 อย่างนี้ทำให้แต่ละต้น "ผิดคนละแบบ" เมื่อรวมกันแล้ว error ต่าง ๆ หักล้างกัน → โมเดลรวมแม่นกว่าและไม่ overfit</p>
+  </section>
+
+  <section class="grid">
+    <div class="card pros">
+      <h3>✅ ข้อดี</h3>
+      <ul>
+        <li>แม่นยำสูง ลด overfit จากต้นไม้เดี่ยวได้มาก</li>
+        <li>รับทั้งตัวเลขและหมวดหมู่ ไม่ต้องปรับขนาดข้อมูล</li>
+        <li>วัดความสำคัญของ feature (feature importance) ได้ฟรี</li>
+        <li>เทรนแบบขนานได้ (แต่ละต้นอิสระต่อกัน)</li>
+      </ul>
+    </div>
+    <div class="card cons">
+      <h3>⚠️ ข้อจำกัด</h3>
+      <ul>
+        <li>ช้ากว่าและใช้หน่วยความจำมากกว่าต้นไม้เดี่ยว</li>
+        <li>ตีความผลลัพธ์ยากขึ้น (ยังดีกว่า neural network)</li>
+        <li>อาจ overfit ข้อมูลที่มี noise สูงมาก</li>
+      </ul>
     </div>
   </section>
 
