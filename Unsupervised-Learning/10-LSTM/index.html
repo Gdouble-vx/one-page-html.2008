@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>LSTM (Long Short-Term Memory) — Deep Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#701a75,#d946ef);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -53,6 +56,7 @@
   <p class="sub">โครงข่ายความจำระยะยาว-สั้น — หน่วยความจำพิเศษ (cell state) ที่ไหลผ่านทุก timestep พร้อม "ประตู" 3 บานคอยควบคุมว่าจะจำ ลืม หรือส่งออกข้อมูลอะไร</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">ปรับค่า <b>x</b> (input), <b>h_prev</b>, <b>c_prev</b> แล้วดูประตูทั้ง 3 (forget, input, output) คำนวณค่าออกมา — หรือกด "เล่นลำดับ" เพื่อดู LSTM จำ-ลืมค่าไปทีละขั้น</p>
@@ -185,6 +189,9 @@ function step(xIn){
   c = f*c + i*ct;
   h = o*Math.tanh(c);
   t++;
+  // ซิงก์สไลเดอร์ h_prev / c_prev ให้ตรงกับสถานะจริง
+  document.getElementById('hIn').value = h;
+  document.getElementById('cIn').value = c;
   update();
   return {f,i,o,ct};
 }

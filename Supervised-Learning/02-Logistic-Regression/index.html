@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Logistic Regression — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#7c2d12,#ea580c);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -53,6 +56,7 @@
   <p class="sub">การถดถอยโลจิสติก — แม้ชื่อมี "Regression" แต่ใช้แบ่งประเภท (classification) โดยทำนายความน่าจะเป็น 0–1 ผ่านฟังก์ชัน Sigmoid</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">คลิกบนกราฟเพื่อเพิ่มจุด (สีส้ม = class 1, สีน้ำเงิน = class 0) แล้วกด "ฝึกโมเดล" เพื่อดูเส้นแบ่งเรียนรู้แบบไล่ทีละขั้น</p>
@@ -170,8 +174,13 @@ const PAD = 50;
 
 let pts = [];
 let w1=0, w2=0, b=0, epoch=0;
-let training = false;
+let training = false, trainIv = null;
 let lr = 0.1, maxEpochs = 600;   // ปรับได้จาก slider ใน Parameter Tuning
+function stopTrain(){
+  training = false;
+  if(trainIv){ clearInterval(trainIv); trainIv = null; }
+  document.getElementById('trainBtn').textContent = '🏋️ ฝึกโมเดล (Gradient Descent)';
+}
 
 function randomData(n=26){
   pts = [];
@@ -182,6 +191,7 @@ function randomData(n=26){
     else pts.push({x:cx0+(Math.random()*150-75), y:cy0+(Math.random()*150-75), c:0});
   }
   w1=0; w2=0; b=0; epoch=0;
+  stopTrain();
   update();
 }
 
@@ -243,17 +253,25 @@ function draw(){
   }
   // decision boundary
   if(w1!==0 || w2!==0 || b!==0){
-    // z = 0 line
-    const yOf = x => H/2 + 200*(-(w1*((x-W/2)/200)+b)/w2);
     ctx.strokeStyle = '#f97316'; ctx.lineWidth = 3;
     ctx.setLineDash([8,6]);
-    ctx.beginPath();
-    ctx.moveTo(PAD, yOf(PAD)); ctx.lineTo(W-PAD, yOf(W-PAD)); ctx.stroke();
+    if(Math.abs(w2) > 1e-6){
+      const yOf = x => H/2 + 200*(-(w1*((x-W/2)/200)+b)/w2);
+      ctx.beginPath(); ctx.moveTo(PAD, yOf(PAD)); ctx.lineTo(W-PAD, yOf(W-PAD)); ctx.stroke();
+    } else if(Math.abs(w1) > 1e-6){
+      // w2 ≈ 0 → เส้นแบ่งแนวตั้ง: z = w1·nx + b = 0 → nx = -b/w1
+      const xOf = W/2 + 200*(-b/w1);
+      ctx.beginPath(); ctx.moveTo(xOf, PAD); ctx.lineTo(xOf, H-PAD); ctx.stroke();
+    }
     ctx.setLineDash([]);
-    // soft probability band
-    const g = ctx.createLinearGradient(0,H,0,0);
-    g.addColorStop(0,'rgba(249,115,22,.08)');
-    g.addColorStop(1,'rgba(59,130,246,.08)');
+    // probability band ไล่สีตามทิศตั้งฉากของเส้นแบ่งจริง (ไม่ใช่ gradient นิ่ง)
+    const nx = w1/200, ny = w2/200;
+    const len = Math.hypot(nx, ny) || 1;
+    const ux = nx/len, uy = ny/len;
+    const g = ctx.createLinearGradient(W/2 - ux*300, H/2 - uy*300, W/2 + ux*300, H/2 + uy*300);
+    g.addColorStop(0,'rgba(249,115,22,.10)');
+    g.addColorStop(0.5,'rgba(148,163,184,.04)');
+    g.addColorStop(1,'rgba(59,130,246,.10)');
     ctx.fillStyle = g;
     ctx.fillRect(PAD, PAD, W-2*PAD, H-2*PAD);
   }
@@ -276,18 +294,19 @@ cv.addEventListener('mousedown', e=>{
 });
 
 document.getElementById('trainBtn').onclick = ()=>{
-  if(training){ training=false; document.getElementById('trainBtn').textContent='🏋️ ฝึกโมเดล (Gradient Descent)'; return; }
+  if(training){ stopTrain(); return; }
+  if(!pts.length) return;
   training=true;
   document.getElementById('trainBtn').textContent='⏸ หยุด';
-  const iv = setInterval(()=>{
-    if(!training){ clearInterval(iv); return; }
+  trainIv = setInterval(()=>{
+    if(!training || !pts.length){ stopTrain(); return; }   // ล้างข้อมูลกลางคัน → หยุดเอง ไม่ค้าง
     trainStep();
-    if(epoch>=maxEpochs){ training=false; clearInterval(iv); document.getElementById('trainBtn').textContent='🏋️ ฝึกโมเดล (Gradient Descent)'; }
+    if(epoch>=maxEpochs){ stopTrain(); }
   }, 30);
 };
 document.getElementById('stepBtn').onclick = ()=>trainStep();
 document.getElementById('resetBtn').onclick = ()=>randomData();
-document.getElementById('clearBtn').onclick = ()=>{ pts=[]; w1=0;w2=0;b=0;epoch=0; update(); };
+document.getElementById('clearBtn').onclick = ()=>{ stopTrain(); pts=[]; w1=0;w2=0;b=0;epoch=0; update(); };
 
 // --- Parameter Tuning sliders ---
 document.getElementById('tuneLr').oninput = e=>{

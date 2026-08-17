@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Transformer — Deep Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#831843,#f43f5e);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -52,9 +55,10 @@
   <p class="sub">สถาปัตยกรรมที่อยู่เบื้องหลัง GPT, BERT, Gemini — ใช้กลไก <b>Self-Attention</b> ให้ทุกคำมองเห็นและ "ให้ความสนใจ" กันเองทั้งหมดพร้อมกัน (parallel) แทนการอ่านทีละคำ</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
-    <p class="lead">Attention map 5×5 ด้านซ้าย — แถว = คำที่เป็น Query, คอลัมน์ = คำที่เป็น Key สีเข้ม = ให้ความสนใจมาก คลิกแถวเพื่อไฮไลต์ ดูผล weighted sum ด้านล่าง</p>
+    <p class="lead">Attention map 5×5 ด้านซ้าย — แถว = คำที่เป็น Query, คอลัมน์ = คำที่เป็น Key สีเข้ม = ให้ความสนใจมาก คลิกแถวเพื่อไฮไลต์ แล้วดูว่าคำนั้น "มอง" คำไหนมากที่สุดด้านล่าง</p>
     <div class="two">
       <div>
         <canvas id="attn" width="480" height="380"></canvas>

@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Decision Tree — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#1e1b4b,#4f46e5);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
@@ -57,6 +60,7 @@
   <p class="sub">ต้นไม้ตัดสินใจ — แบ่งข้อมูลด้วยคำถาม "ถ้า...แล้ว..." ซ้ำ ๆ ไปเรื่อย ๆ เหมือนแผนผังการตัดสินใจ</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">กด "เพิ่มความลึก" เพื่อให้ต้นไม้เรียนรู้การแบ่งข้อมูลทีละชั้น — ดูเส้นแบ่งบนกราฟซ้าย และโครงสร้างต้นไม้ทางขวา</p>
@@ -75,7 +79,7 @@
     </div>
     <div class="stats">
       <div class="stat">ความลึก: <b id="depth">0</b></div>
-      <div class="stat">จำนวนโหนด: <b id="nodes">1</b></div>
+      <div class="stat">จำนวนโหนด: <b id="nodes">0</b></div>
       <div class="stat">Accuracy (ชุดฝึก): <b id="acc">—</b></div>
     </div>
   </section>

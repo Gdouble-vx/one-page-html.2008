@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Linear Regression — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -51,6 +54,7 @@
   <p class="sub">การถดถอยเชิงเส้น — หาเส้นตรงที่อธิบายความสัมพันธ์ระหว่างตัวแปรต้น (x) กับค่าที่ต้องการทำนาย (y)</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">ลากจุดสีฟ้าบนกราฟเพื่อดูเส้นฟิตเปลี่ยนแบบเรียลไทม์ กดปุ่มเพื่อสุ่มข้อมูลใหม่</p>
@@ -169,7 +173,7 @@ const W = cv.width, H = cv.height;
 const PAD = 50;
 
 let pts = [];
-let userM = null, userB = null, lastM = 0, lastB = 0, lastMse = 0;
+let userM = null, userB = null, lastM = 0, lastB = 0, lastR2 = 0, lastMse = 0;
 
 function randomData(n = 14){
   pts = [];
@@ -185,7 +189,7 @@ function randomData(n = 14){
 
 function fit(){
   const n = pts.length;
-  if(n < 2){ draw(); updateStats(0,0,0); return; }
+  if(n < 2){ draw(); updateStats(0,0,0,0); return; }
   let sx=0, sy=0, sxx=0, sxy=0;
   for(const p of pts){ sx+=p.x; sy+=p.y; sxx+=p.x*p.x; sxy+=p.x*p.y; }
   const m = (n*sxy - sx*sy) / (n*sxx - sx*sx);
@@ -199,7 +203,7 @@ function fit(){
   }
   const r2 = ssTot === 0 ? 0 : 1 - ssRes/ssTot;
   const mse = ssRes/n;
-  lastM = m; lastB = b; lastMse = mse;
+  lastM = m; lastB = b; lastR2 = r2; lastMse = mse;
   draw(m, b, r2, mse);
   updateStats(m, b, r2, mse);
 }
@@ -256,26 +260,26 @@ function draw(m, b, r2, mse){
   }
 }
 
-// --- interactions: add & drag points ---
+// --- interactions: add & drag points (pointer events: รองรับมือถือ + ลากออกนอก canvas แล้วปล่อยก็ไม่ค้าง) ---
 let dragging = null;
-function hit(p){ return Math.abs(p.x-evt.x)<12 && Math.abs(p.y-evt.y)<12; }
-
-cv.addEventListener('mousedown', e=>{
+function toCanvas(e){
   const rect = cv.getBoundingClientRect();
-  evt = {x:(e.clientX-rect.left)*(W/rect.width), y:(e.clientY-rect.top)*(H/rect.height)};
-  const found = pts.find(p=>Math.abs(p.x-evt.x)<12 && Math.abs(p.y-evt.y)<12);
-  if(found){ dragging = found; }
-  else { pts.push({x:evt.x, y:evt.y, r:7}); fit(); }
+  return {x:(e.clientX-rect.left)*(W/rect.width), y:(e.clientY-rect.top)*(H/rect.height)};
+}
+cv.addEventListener('pointerdown', e=>{
+  const pos = toCanvas(e);
+  const found = pts.find(p=>Math.abs(p.x-pos.x)<12 && Math.abs(p.y-pos.y)<12);
+  if(found){ dragging = found; e.preventDefault(); }
+  else { pts.push({x:pos.x, y:pos.y, r:7}); fit(); }
 });
-cv.addEventListener('mousemove', e=>{
+window.addEventListener('pointermove', e=>{
   if(!dragging) return;
-  const rect = cv.getBoundingClientRect();
-  evt = {x:(e.clientX-rect.left)*(W/rect.width), y:(e.clientY-rect.top)*(H/rect.height)};
-  dragging.x = Math.max(PAD, Math.min(W-PAD, evt.x));
-  dragging.y = Math.max(PAD, Math.min(H-PAD, evt.y));
+  const pos = toCanvas(e);
+  dragging.x = Math.max(PAD, Math.min(W-PAD, pos.x));
+  dragging.y = Math.max(PAD, Math.min(H-PAD, pos.y));
   fit();
 });
-cv.addEventListener('mouseup', ()=>{ dragging = null; });
+window.addEventListener('pointerup', ()=>{ dragging = null; });
 
 document.getElementById('randomBtn').onclick = ()=>randomData();
 document.getElementById('clearBtn').onclick = ()=>{ pts=[]; fit(); };
@@ -307,7 +311,7 @@ function onTune(){
   document.getElementById('tuneMv').textContent = userM.toFixed(2);
   document.getElementById('tuneBv').textContent = userB.toFixed(0);
   updateTune();
-  draw();
+  draw(lastM, lastB, lastR2, lastMse);   // ใช้ค่า best-fit ล่าสุด เพื่อไม่ให้เส้นน้ำเงินหาย
 }
 tuneM.oninput = onTune;
 tuneB.oninput = onTune;

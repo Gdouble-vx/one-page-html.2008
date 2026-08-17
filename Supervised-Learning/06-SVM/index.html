@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>SVM — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#3b0764,#9333ea);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -49,6 +52,7 @@
   <p class="sub">เครื่องเวกเตอร์สนับสนุน — หาเส้นแบ่งที่ดีที่สุด โดยให้ระยะห่าง (margin) ระหว่างสอง class กว้างที่สุดเท่าที่จะทำได้</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">กด "ฝึก SVM" เพื่อหาเส้นแบ่งพร้อมขอบ margin ที่กว้างที่สุด — จุดที่ขีดวงไว้คือ <b>Support Vectors</b> ที่กำหนดตำแหน่งของเส้น</p>
@@ -186,12 +190,10 @@ function train(epochs=800, lr=0.05){
   trained = true;
 }
 
-function yOf(x){
-  return H/2 + 160*(-(w.x*((x-W/2)/160) + b)/w.y);
-}
 function distTo(p){
   const nx=(p.x-W/2)/160, ny=(p.y-H/2)/160;
-  return (w.x*nx + w.y*ny + b) / Math.hypot(w.x/160, w.y/160) * 160;
+  const z = w.x*nx + w.y*ny + b;
+  return z / Math.hypot(w.x, w.y) * 160;   // signed distance ในหน่วยพิกเซล (เดิมคูณเกิน 160 เท่า)
 }
 
 function draw(){
@@ -203,43 +205,43 @@ function draw(){
     ctx.beginPath();ctx.moveTo(PAD,i);ctx.lineTo(W-PAD,i);ctx.stroke();
   }
   let svs=[], marginW=0, hinge=0;
-  if(trained && w.y!==0){
-    // margin lines
-    const norm = Math.hypot(w.x,w.y);
-    const off = 160/norm;
-    const yTop = x => yOf(x) - off*Math.sign(w.y)*160/160*0; // keep simple: offset along normal
-    // compute margin offset in px along normal direction
-    const dx = w.x/norm, dy = w.y/norm;   // unit normal (in normalized space)
-    const pxOff = 160;                    // margin = 1 in normalized units => 160 px
-    const yM1 = x => {
-      // line w·x+b=1: point on line at x
-      const nx=(x-W/2)/160;
-      const ny1 = (1 - b - w.x*nx)/w.y;
-      return H/2 + ny1*160;
-    };
-    const yM0 = x => {
-      const nx=(x-W/2)/160;
-      const ny0 = (-1 - b - w.x*nx)/w.y;
-      return H/2 + ny0*160;
-    };
-    // decision
-    ctx.strokeStyle='#a855f7'; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(PAD,yOf(PAD)); ctx.lineTo(W-PAD,yOf(W-PAD)); ctx.stroke();
-    // margins
-    ctx.strokeStyle='rgba(168,85,247,.45)'; ctx.lineWidth=2; ctx.setLineDash([7,6]);
-    ctx.beginPath(); ctx.moveTo(PAD,yM1(PAD)); ctx.lineTo(W-PAD,yM1(W-PAD)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(PAD,yM0(PAD)); ctx.lineTo(W-PAD,yM0(W-PAD)); ctx.stroke();
-    ctx.setLineDash([]);
-    // fill margin band
-    ctx.fillStyle='rgba(168,85,247,.07)';
-    ctx.beginPath();
-    ctx.moveTo(PAD,yM1(PAD)); ctx.lineTo(W-PAD,yM1(W-PAD));
-    ctx.lineTo(W-PAD,yM0(W-PAD)); ctx.lineTo(PAD,yM0(PAD));
-    ctx.closePath(); ctx.fill();
-    marginW = 2*160/Math.hypot(w.x,w.y);
-    // support vectors: closest points to boundary (one per side)
-    const sorted=[...pts].sort((a,b)=>Math.abs(distTo(a))-Math.abs(distTo(b)));
-    const sv = sorted.filter(p=>Math.abs(distTo(p)) < marginW/2*1.02 + 12);
+  if(trained && (Math.abs(w.y)>1e-6 || Math.abs(w.x)>1e-6)){
+    const norm = Math.hypot(w.x, w.y);
+    marginW = 2*160/norm;   // ความกว้าง margin ในพิกเซล
+    const half = marginW/2;
+    if(Math.abs(w.y) > 1e-6){
+      // เส้นแบ่งแบบไม่ตั้งฉาก: y = f(x)
+      const yM = k => x => H/2 + 160*((k - b - w.x*((x-W/2)/160))/w.y);
+      const yD = yM(0), y1 = yM(1), y0 = yM(-1);
+      ctx.strokeStyle='#a855f7'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(PAD,yD(PAD)); ctx.lineTo(W-PAD,yD(W-PAD)); ctx.stroke();
+      ctx.strokeStyle='rgba(168,85,247,.45)'; ctx.lineWidth=2; ctx.setLineDash([7,6]);
+      ctx.beginPath(); ctx.moveTo(PAD,y1(PAD)); ctx.lineTo(W-PAD,y1(W-PAD)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(PAD,y0(PAD)); ctx.lineTo(W-PAD,y0(W-PAD)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(168,85,247,.07)';
+      ctx.beginPath();
+      ctx.moveTo(PAD,y1(PAD)); ctx.lineTo(W-PAD,y1(W-PAD));
+      ctx.lineTo(W-PAD,y0(W-PAD)); ctx.lineTo(PAD,y0(PAD));
+      ctx.closePath(); ctx.fill();
+    } else {
+      // เส้นแบ่งแนวตั้ง (w.y ≈ 0): x = ค่าคงที่
+      const xM = k => W/2 + 160*((k - b)/w.x);
+      const xD = xM(0), x1 = xM(1), x0 = xM(-1);
+      ctx.strokeStyle='#a855f7'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(xD,PAD); ctx.lineTo(xD,H-PAD); ctx.stroke();
+      ctx.strokeStyle='rgba(168,85,247,.45)'; ctx.lineWidth=2; ctx.setLineDash([7,6]);
+      ctx.beginPath(); ctx.moveTo(x1,PAD); ctx.lineTo(x1,H-PAD); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0,PAD); ctx.lineTo(x0,H-PAD); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(168,85,247,.07)';
+      ctx.beginPath();
+      ctx.moveTo(x1,PAD); ctx.lineTo(x1,H-PAD);
+      ctx.lineTo(x0,H-PAD); ctx.lineTo(x0,PAD);
+      ctx.closePath(); ctx.fill();
+    }
+    // support vectors: จุดที่อยู่บน/ใกล้ขอบ margin
+    const sv = pts.filter(p=>Math.abs(distTo(p)) < half*1.02 + 12);
     svs = sv;
     for(const p of sv){
       ctx.beginPath(); ctx.arc(p.x,p.y,11,0,Math.PI*2);

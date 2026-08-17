@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Random Forest — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#052e16,#15803d);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -57,6 +60,7 @@
   <p class="sub">ป่าสุ่ม — ฝึกต้นไม้ตัดสินใจหลายร้อยต้นด้วยข้อมูลสุ่มต่างกัน แล้วให้ทุกต้นโหวต "ภูมิปัญญาของฝูงชน" ทำให้แม่นยำและทนต่อ overfit</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">กด "สร้างป่า" เพื่อฝึก Random Forest จำนวน 60 ต้น — เส้นแบ่งกลายเป็นขอบเขตแบบรวมของหลายต้นที่โหวตกัน</p>
@@ -191,42 +195,43 @@ function gini(inds){
 }
 
 // random stump: random feature + threshold chosen to minimize gini
-function trainStump(boot){
+function bestSplit(inds, f){
+  const vals = [...new Set(inds.map(i=>pts[i][f]))].sort((a,b)=>a-b);
   let best = null;
-  const f = Math.random()<0.5 ? 'x' : 'y';
-  const vals = [...new Set(boot.map(i=>pts[i][f]))].sort((a,b)=>a-b);
   for(let v=1;v<vals.length;v++){
     const t=(vals[v-1]+vals[v])/2;
-    const L=boot.filter(i=>pts[i][f]<=t), R=boot.filter(i=>pts[i][f]>t);
+    const L=inds.filter(i=>pts[i][f]<=t), R=inds.filter(i=>pts[i][f]>t);
     if(L.length<3||R.length<3) continue;
-    const imp = gini(boot) - (L.length/boot.length)*gini(L) - (R.length/boot.length)*gini(R);
-    if(!best||imp>best.imp) best={f,t,imp};
+    const imp = gini(inds) - (L.length/inds.length)*gini(L) - (R.length/inds.length)*gini(R);
+    if(!best||imp>best.imp) best={f,t,L,R,imp};
   }
   return best;
 }
-
+const maj = inds=>{
+  const n0=inds.filter(i=>pts[i].c===0).length;
+  return n0>=inds.length/2?0:1;
+};
+// ต้นไม้ลึกสูงสุด 2 ชั้น + สุ่มเลือก feature (เหมือน max_features)
+function growTree(inds, depth){
+  const f = Math.random()<0.5 ? 'x' : 'y';
+  const sp = bestSplit(inds, f);
+  if(!sp || depth<=0) return {leaf:true, v:maj(inds)};
+  return {leaf:false, f:sp.f, t:sp.t, l:growTree(sp.L, depth-1), r:growTree(sp.R, depth-1)};
+}
 function addTree(){
   // bootstrap sample
   const boot=[];
   for(let i=0;i<pts.length;i++) boot.push(Math.floor(Math.random()*pts.length));
-  const stump = trainStump(boot);
-  if(!stump) return false;
-  const L = boot.filter(i=>pts[i][stump.f]<=stump.t);
-  const R = boot.filter(i=>pts[i][stump.f]>stump.t);
-  const maj = inds=>{
-    const n0=inds.filter(i=>pts[i].c===0).length;
-    return n0>=inds.length/2?0:1;
-  };
-  trees.push({
-    f: stump.f, t: stump.t,
-    l: maj(L), r: maj(R),
-    boot
-  });
+  const tree = growTree(boot, 2);
+  if(!tree || tree.leaf) return false;
+  trees.push(tree);
   return true;
 }
 
 function treePred(t, p){
-  return p[t.f] <= t.t ? t.l : t.r;
+  let n = t;
+  while(!n.leaf) n = p[n.f] <= n.t ? n.l : n.r;
+  return n.v;
 }
 
 function forestPred(p){
@@ -273,7 +278,12 @@ function draw(){
   let ok=0, singleOk=0;
   for(const p of pts){
     if(forestPred(p)===p.c) ok++;
-    if(trees.length && treePred(trees[Math.floor(Math.random()*trees.length)],p)===p.c) singleOk++;
+    if(trees.length){
+      // เฉลี่ยความถูกต้องของทุกต้น (ไม่ใช่สุ่มต้นเดียว)
+      let correct=0;
+      for(const t of trees) if(treePred(t,p)===p.c) correct++;
+      singleOk += correct/trees.length;
+    }
   }
   document.getElementById('nTrees').textContent = trees.length;
   document.getElementById('acc').textContent = trees.length ? (ok/pts.length*100).toFixed(1)+'%' : '—';
@@ -291,7 +301,8 @@ document.getElementById('resetBtn').onclick = ()=>randomData();
 document.getElementById('tuneTrees').oninput = e=>{
   const target = +e.target.value;
   document.getElementById('tuneTreesv').textContent = target;
-  while(trees.length < target) addTree();
+  let guard = 0;
+  while(trees.length < target && guard++ < 1000) addTree();   // guard กันลูปไม่จบถ้าสร้างต้นไม่ได้
   if(trees.length > target) trees.length = target;
   draw();
 };

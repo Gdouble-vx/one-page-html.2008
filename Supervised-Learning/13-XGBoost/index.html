@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>XGBoost — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#78350f,#f59e0b);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
@@ -58,6 +61,7 @@
   <p class="sub">Extreme Gradient Boosting — ฝึกต้นไม้ทีละต้นซ้ำ ๆ โดยต้นใหม่แต่ละต้นเรียนรู้จาก <b>ความผิดพลาด (residuals)</b> ของต้นก่อนหน้า จนกลายเป็นโมเดลที่ชนะการแข่งขัน Kaggle มากมาย</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">กด "เพิ่มต้นไม้" ทีละต้นเพื่อดู Boosting ทำงาน — ต้นไม้ต้นใหม่แก้จุดที่ต้นก่อนหน้าทำผิด ดู loss ลดลงในกราฟขวา</p>
@@ -304,12 +308,17 @@ function draw(){
   const el=document.getElementById('trees');
   el.innerHTML = trees.length===0
     ? '<p style="color:#64748b">กด "เพิ่มต้นไม้" เพื่อเริ่ม Boosting...</p>'
-    : trees.slice(-12).map((t,i)=>`
-      <div class="treeitem">🌳 ต้นที่ ${i+1}: ถ้า <b>${t.f==='x'?'X':'Y'} ≤ ${t.t.toFixed(0)}</b> → +${t.l.toFixed(3)} &nbsp;|&nbsp; อย่างอื่น → ${t.r.toFixed(3)}</div>`).join('');
+    : trees.map((t,idx)=>`
+      <div class="treeitem">🌳 ต้นที่ ${idx+1}: ถ้า <b>${t.f==='x'?'X':'Y'} ≤ ${t.t.toFixed(0)}</b> → +${t.l.toFixed(3)} &nbsp;|&nbsp; อย่างอื่น → ${t.r.toFixed(3)}</div>`).slice(-12).join('');
 }
 
 document.getElementById('addBtn').onclick=()=>{ addTree(); draw(); };
-document.getElementById('boostBtn').onclick=()=>{ for(let i=0;i<50;i++) addTree(); draw(); };
+document.getElementById('boostBtn').onclick=()=>{
+  // ใช้กลไกเดียวกับ slider n_estimators (เพิ่มอีก 50 ต้น)
+  const el = document.getElementById('tuneN');
+  el.value = Math.min(100, trees.length + 50);
+  el.dispatchEvent(new Event('input'));
+};
 document.getElementById('resetBtn').onclick=()=>randomData();
 
 // --- Parameter Tuning sliders ---
@@ -329,7 +338,8 @@ document.getElementById('tuneEta').oninput = e=>{
 document.getElementById('tuneN').oninput = e=>{
   const target = +e.target.value;
   document.getElementById('tuneNv').textContent = target;
-  while(trees.length < target) addTree();
+  let guard = 0;
+  while(trees.length < target && guard++ < 500) addTree();   // guard กันลูปไม่จบ
   if(trees.length > target){ trees.length = target; losses.length = target; recomputeF(); }
   draw();
 };

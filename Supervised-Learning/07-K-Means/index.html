@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>K-Means Clustering — Unsupervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#164e63,#0891b2);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -51,6 +54,7 @@
   <p class="sub">K-มีนส์ — จัดกลุ่มข้อมูลที่ไม่มีป้ายกำกับออกเป็น k กลุ่ม โดยให้จุดในกลุ่มเดียวกันอยู่ใกล้ centroid กันมากที่สุด</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">คลิกเพื่อเพิ่มจุดข้อมูล (ไม่มี label!) แล้วกด "เริ่ม" เพื่อดู K-Means จัดกลุ่มแบบทีละขั้นตอน</p>
@@ -165,15 +169,17 @@ let k = 3, iter = 0, running = false, timer = null;
 
 function sample(){
   pts = [];
-  for(let g=0; g<3; g++){
-    const cx = W*(0.2+0.3*g) + (Math.random()*40-20);
-    const cy = H*(0.3+0.25*(g%2)) + (Math.random()*40-20);
-    for(let i=0;i<14;i++) pts.push({x:cx+(Math.random()*120-60), y:cy+(Math.random()*120-60)});
+  const nPer = Math.max(4, Math.floor(40/k));
+  for(let g=0; g<k; g++){   // สร้าง k กลุ่มตามค่าที่ตั้งไว้
+    const cx = W*(0.15+0.7*(g+0.5)/k) + (Math.random()*30-15);
+    const cy = H*(0.25+0.5*(g%2)) + (Math.random()*30-15);
+    for(let i=0;i<nPer;i++) pts.push({x:cx+(Math.random()*110-55), y:cy+(Math.random()*110-55)});
   }
   reset();
 }
 
 function reset(){
+  if(running){ running=false; clearInterval(timer); timer=null; document.getElementById('runBtn').textContent='▶ เริ่ม K-Means'; }
   centroids = []; assign = []; iter = 0;
   setStatus('รอเริ่ม');
   draw();
@@ -289,11 +295,12 @@ document.getElementById('runBtn').onclick = ()=>{
   document.getElementById('runBtn').textContent='⏸ หยุด';
   setStatus('กำลังทำงาน...');
   timer = setInterval(()=>{
-    if(!running){ clearInterval(timer); return; }
-    const moved = assignStep(); updateStep();
+    if(!running){ clearInterval(timer); timer=null; return; }
+    const moved = assignStep();
+    const cmoved = updateStep();
     iter++; draw();
-    if(!moved){
-      running=false; clearInterval(timer);
+    if(!moved && !cmoved){   // หยุดเมื่อทั้ง assignment และ centroid ไม่ขยับ
+      running=false; clearInterval(timer); timer=null;
       document.getElementById('runBtn').textContent='▶ เริ่ม K-Means';
       setStatus('✅ ครบวงจรแล้ว (converged)');
     }

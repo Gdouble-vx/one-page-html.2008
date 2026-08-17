@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Reinforcement Learning (Q-Learning) — RL</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#052e16,#16a34a);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -54,6 +57,7 @@
   <p class="sub">การเรียนรู้แบบเสริมแรง — เอเจนต์ (agent) เรียนรู้จากการลองผิดลองถูกในสิ่งแวดล้อม รับ <b>รางวัล (reward)</b> เมื่อทำดี และถูก <b>ลงโทษ</b> เมื่อทำผิด โดยไม่ต้องมีคำตอบสำเร็จรูป</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">เอเจนต์ต้องเดินจากมุมซ้ายบนไปให้ถึงดาว ⭐ โดยหลบกำแพง — เริ่มต้นเดินมั่ว ๆ (สีส้ม) แล้วค่อย ๆ ฉลาดขึ้น (สีเขียว) ดูค่า Q-value เปลี่ยนไป</p>
@@ -264,8 +268,8 @@ function draw(){
       ctx.fillStyle=`rgba(${Math.round(134+ (22-134)*t)},${Math.round(239+ (163-239)*t)},${Math.round(153+ (37-153)*t)},${0.15+0.55*t})`;
       ctx.fillRect(x,y,CELL,CELL);
       ctx.strokeStyle='#1e293b'; ctx.strokeRect(x,y,CELL,CELL);
-      // policy arrow
-      if(Q[r][c]){
+      // policy arrow (ซ่อนเมื่อทุกทิศมีค่าเท่ากัน เช่น ตอน Q=0 ทั้งหมด)
+      if(Q[r][c] && !Q[r][c].every(v=>v===Q[r][c][0])){
         const mx=Math.max(...Q[r][c]);
         const best=Q[r][c].indexOf(mx);
         ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=2.5;
@@ -307,9 +311,11 @@ function draw(){
 }
 
 function runFast(){
-  for(let i=0;i<100;i++){
-    if(!(agent.r===GOAL.r&&agent.c===GOAL.c)) step();
-    else endEpisode();
+  const target = episode + 100;   // 100 episodes ต่อ tick (ตรงกับปุ่ม)
+  let guard = 0;
+  while(episode < target && guard++ < 200000){
+    if(agent.r===GOAL.r&&agent.c===GOAL.c) endEpisode();
+    else step();
   }
   draw();
 }

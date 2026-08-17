@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>CNN (Convolutional Neural Network) — Deep Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#312e81,#6366f1);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -52,6 +55,7 @@
   <p class="sub">โครงข่ายประสาทเทียมแบบคอนโวลูชัน — ใช้ "เลนส์สแกน" (kernel/filter) เลื่อนทับภาพเพื่อดึงคุณลักษณะ เช่น ขอบ เส้น มุม ทีละชั้น ๆ</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">คลิกที่กริดซ้ายเพื่อวาดลวดลาย (7×7 พิกเซล) แล้วดู <b>kernel</b> เลื่อนสแกนไปเรื่อย ๆ เกิดเป็น <b>feature map</b> ทางขวา — ลองเปลี่ยน kernel แล้วดูผลต่าง</p>
@@ -264,9 +268,13 @@ function draw(){
     let s=0;
     for(let a=0;a<KS;a++) for(let bb=0;bb<KS;bb++) s+=grid[r+a][c+bb]*K[a][bb];
     if(r===r0&&c===c0) curOut=s;
-    const t=Math.max(0,s)/maxV;
+    const t=Math.abs(s)/maxV;
     const isCur=r===r0&&c===c0;
-    ctx.fillStyle = isCur ? 'rgba(250,204,21,.95)' : `rgba(${Math.round(99+(56-99)*t)},${Math.round(102+(189-102)*t)},${Math.round(241+(243-241)*t)},${0.25+0.75*t})`;
+    let cellColor;
+    if(isCur) cellColor='rgba(250,204,21,.95)';
+    else if(s>=0) cellColor=`rgba(${Math.round(99+(56-99)*t)},${Math.round(102+(189-102)*t)},${Math.round(241+(243-241)*t)},${0.25+0.75*t})`;
+    else cellColor=`rgba(${Math.round(248+(185-248)*t)},${Math.round(113+(28-113)*t)},${Math.round(113+(28-113)*t)},${0.25+0.75*t})`;   // ค่าลบ = สีแดง
+    ctx.fillStyle = cellColor;
     ctx.fillRect(ox+c*CELL, oy+r*CELL, CELL, CELL);
     ctx.strokeStyle=isCur?'#facc15':'#334155'; ctx.lineWidth=isCur?3:1;
     ctx.strokeRect(ox+c*CELL, oy+r*CELL, CELL, CELL);
@@ -282,7 +290,11 @@ function draw(){
 
   document.getElementById('posVal').textContent=pos;
   document.getElementById('posSlider').value=pos;
-  document.getElementById('calc').textContent=`Σ (${grid[r0][c0]}×${K[0][0].toFixed(2)} + ... ) = ${curOut.toFixed(1)}`;
+  let terms='';
+  for(let a=0;a<KS;a++) for(let bb=0;bb<KS;bb++){
+    terms += `${grid[r0+a][c0+bb]}×${K[a][bb].toFixed(1)}${(a===KS-1&&bb===KS-1)?'':' + '}`;
+  }
+  document.getElementById('calc').textContent=`Σ (${terms}) = ${curOut.toFixed(1)}`;
 }
 
 document.getElementById('posSlider').oninput=e=>{ pos=+e.target.value; draw(); };

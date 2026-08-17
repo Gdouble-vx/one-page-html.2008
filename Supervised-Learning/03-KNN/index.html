@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>k-Nearest Neighbors (kNN) — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#14532d,#16a34a);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:720px;margin-inline:auto}
   main{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
@@ -52,6 +55,7 @@
   <p class="sub">เพื่อนบ้านใกล้ที่สุด k ตัว — "บอกฉันว่าเพื่อนบ้านของเธอเป็นใคร แล้วฉันจะบอกว่าเธอเป็นใคร"</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">คลิกบนกราฟเพื่อวางจุดทดสอบ (ดาวสีขาว) kNN จะหาเพื่อนบ้านที่ใกล้ที่สุด k ตัว แล้วโหวตว่าเป็น class ไหน</p>
@@ -193,10 +197,12 @@ function draw(){
   if(!query) return;
   const sorted = pts.map(p=>({p, d:dist(p, query)})).sort((a,b)=>a.d-b.d);
   const kn = sorted.slice(0, k);
-  // vote
+  // vote (ถ้าเสมอ สุ่มเลือกจาก class ที่คะแนนเท่ากัน)
   const votes = [0,0,0];
   for(const {p} of kn) votes[p.c]++;
-  const pred = votes.indexOf(Math.max(...votes));
+  const maxV = Math.max(...votes);
+  const winners = votes.map((v,i)=>v===maxV?i:-1).filter(i=>i>=0);
+  const pred = winners[Math.floor(Math.random()*winners.length)];
 
   // circle around query
   ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);

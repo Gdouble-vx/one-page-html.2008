@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Stacking Ensemble — Supervised Learning</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI','Noto Sans Thai',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.7}
   header{background:linear-gradient(135deg,#0c4a6e,#0ea5e9);padding:56px 24px;text-align:center}
   .badge{display:inline-block;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:999px;font-size:13px;letter-spacing:1px}
+  .home{display:inline-block;margin-bottom:20px;color:#94a3b8;text-decoration:none;font-size:14px}
+  .home:hover{color:#fff}
   h1{font-size:42px;margin-top:12px}
   .sub{margin-top:8px;opacity:.85;max-width:760px;margin-inline:auto}
   main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
@@ -52,6 +55,7 @@
   <p class="sub">การซ้อนโมเดล — ฝึกโมเดลพื้นฐาน (base models) หลายตัวให้ทำนายก่อน แล้วเอา <b>คำทำนายของทุกตัว</b> ไปเป็น input ให้โมเดลระดับบน (meta-model) เรียนรู้อีกชั้น เพื่อรวมจุดแข็งของแต่ละโมเดล</p>
 </header>
 <main>
+  <a class="home" href="../../index.html">← กลับหน้าแรก</a>
   <section>
     <h2>🎯 ลองเล่น</h2>
     <p class="lead">โมเดลพื้นฐาน 3 ตัว (ก, ข, ค) แต่ละตัวผิดคนละที่ — กด "ฝึก Stacking" เพื่อให้ meta-model เรียนรู้ว่าจะเชื่อโมเดลไหนตรงไหน แล้วดูผลรวมที่แม่นกว่า</p>
@@ -186,20 +190,21 @@ function randomData(n=60){
   drawAll();
 }
 
-function fitBase(){
-  // a: threshold on x
+function bestThreshold(f){
+  const vals=[...new Set(pts.map(p=>p[f]))].sort((a,b)=>a-b);
   let best=null;
-  for(const f of ['x','y']){
-    const vals=[...new Set(pts.map(p=>p[f]))].sort((a,b)=>a-b);
-    for(let v=1;v<vals.length;v++){
-      const t=(vals[v-1]+vals[v])/2;
-      let err=0;
-      for(const p of pts) if((p[f]<=t?0:1)!==p.c) err++;
-      if(!best||err<best.err) best={f,t,err};
-    }
+  for(let v=1;v<vals.length;v++){
+    const t=(vals[v-1]+vals[v])/2;
+    let err=0;
+    for(const p of pts) if((p[f]<=t?0:1)!==p.c) err++;
+    if(!best||err<best.err) best={t,err};
   }
-  base[0].f='x'; base[0].t=best.t;
-  base[1].f='y'; base[1].t=best.t;
+  return best;
+}
+function fitBase(){
+  // หา threshold ที่ดีที่สุดของแกน x ให้ ก และของแกน y ให้ ข แยกกัน
+  base[0].f='x'; base[0].t=(bestThreshold('x')||{t:W/2}).t;
+  base[1].f='y'; base[1].t=(bestThreshold('y')||{t:Hh/2}).t;
   // c: diagonal logistic via quick gradient descent
   let w=0,b=0;
   for(let e=0;e<300;e++){
@@ -222,8 +227,16 @@ function basePred(i, p){
   const z=(p.x-W/2)/90+(p.y-Hh/2)/90;
   return 1/(1+Math.exp(-(base[2].w*z+base[2].b)))>=0.5?1:0;
 }
+// probability ของ class 1 — ใช้เป็น meta-features (ตามที่การ์ดแนะนำ: ใช้ prob ไม่ใช่ label ตรง ๆ)
+function baseProb(i, p){
+  if(i===0) return 1/(1+Math.exp(-(p.x-base[0].t)/12));
+  if(i===1) return 1/(1+Math.exp(-(p.y-base[1].t)/12));
+  const z=(p.x-W/2)/90+(p.y-Hh/2)/90;
+  return 1/(1+Math.exp(-(base[2].w*z+base[2].b)));
+}
+function metaFeats(p){ return [baseProb(0,p), baseProb(1,p), baseProb(2,p)]; }
 function metaProb(p){
-  const feats=[basePred(0,p),basePred(1,p),basePred(2,p)];
+  const feats=metaFeats(p);
   const z=metaW[0]*feats[0]+metaW[1]*feats[1]+metaW[2]*feats[2]+metaB;
   return 1/(1+Math.exp(-z));
 }
@@ -231,7 +244,7 @@ function trainMeta(epochs=1500, lr=0.5){
   for(let e=0;e<epochs;e++){
     let g=[0,0,0],gb=0;
     for(const p of pts){
-      const feats=[basePred(0,p),basePred(1,p),basePred(2,p)];
+      const feats=metaFeats(p);
       const z=metaW[0]*feats[0]+metaW[1]*feats[1]+metaW[2]*feats[2]+metaB;
       const err=(1/(1+Math.exp(-z)))-p.c;
       for(let j=0;j<3;j++) g[j]+=err*feats[j];
