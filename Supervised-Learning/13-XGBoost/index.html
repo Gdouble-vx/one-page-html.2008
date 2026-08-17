@@ -38,6 +38,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fde68a;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -102,6 +108,49 @@
         <li>ฝึกช้าเมื่อข้อมูลมหาศาลและรอบเยอะ</li>
         <li>ไม่เหมาะกับข้อมูล unstructured (ภาพ/ข้อความ) เท่า deep learning</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">XGBoost มีพารามิเตอร์เยอะ — จับคู่หลักคือ (learning_rate ↔ n_estimators) กับ (max_depth ↔ min_child_weight)</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">n_estimators (จำนวนต้น)</div>
+        <div class="pval">ค่าแนะนำ: 100 – 1000 + early stopping</div>
+        <div class="pdesc">จำนวนรอบ boosting ทั้งหมด</div>
+        <div class="ptip">💡 ใช้ early_stopping_rounds=10 ดู validation — หยุดเมื่อไม่ดีขึ้น</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">learning_rate (eta)</div>
+        <div class="pval">ค่าแนะนำ: 0.01 – 0.3</div>
+        <div class="pdesc">สัดส่วนที่ต้นไม้แต่ละต้นมีส่วนร่วม — เล็ก = แม่นแต่ต้องต้นเยอะ</div>
+        <div class="ptip">💡 ลด eta ลงครึ่งหนึ่ง → มักต้องเพิ่ม n_estimators ประมาณ 2 เท่า</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">max_depth</div>
+        <div class="pval">ค่าแนะนำ: 3 – 10</div>
+        <div class="pdesc">ความลึกของต้นไม้แต่ละต้น</div>
+        <div class="ptip">💡 ข้อมูล tabular ทั่วไป depth 4 – 6 ก็พอ — ลึกเกิน = overfit</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">subsample</div>
+        <div class="pval">ค่าแนะนำ: 0.5 – 1.0</div>
+        <div class="pdesc">สัดส่วนข้อมูลที่สุ่มใช้ต่อรอบ (เหมือน bagging)</div>
+        <div class="ptip">💡 0.8 ช่วยลด overfit และเร็วขึ้น</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">colsample_bytree</div>
+        <div class="pval">ค่าแนะนำ: 0.5 – 1.0</div>
+        <div class="pdesc">สัดส่วน feature ที่สุ่มใช้ต่อต้น</div>
+        <div class="ptip">💡 ลดลง = ต้นไม้ต่างกันมากขึ้น (ดีเมื่อ feature เยอะ)</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">min_child_weight / gamma / λ</div>
+        <div class="pval">เริ่ม 1 / 0 / 1</div>
+        <div class="pdesc">regularization — กันโหนดที่จำข้อมูลจุดเดียว</div>
+        <div class="ptip">💡 เพิ่มค่าเหล่านี้เมื่อ overfit — ช่วยให้โมเดลเรียบขึ้น</div>
+      </div>
     </div>
   </section>
 

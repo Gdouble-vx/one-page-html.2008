@@ -36,6 +36,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#bae6fd;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -96,6 +102,43 @@
         <li>เสี่ยงต่อ data leakage ถ้าไม่ทำ cross-validation</li>
         <li>ซับซ้อน ดีบักและอธิบายยาก</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">Stacking tuning ต่างจากโมเดลเดียว — เน้นที่ความหลากหลายของ base models และวิธีสร้าง meta-features</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">ความหลากหลายของ Base models</div>
+        <div class="pval">ใช้คนละตระกูล: LR + kNN + Tree + SVM</div>
+        <div class="pdesc">โมเดลที่ "ผิดคนละแบบ" รวมกันแล้วเก่งกว่าโมเดลที่เหมือนกัน</div>
+        <div class="ptip">💡 อย่าใช้ XGBoost + LightGBM + CatBoost เป็น base ล้วน ๆ — ผิดแบบเดียวกัน</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Meta-model</div>
+        <div class="pval">Logistic Regression (นิยม) / LightGBM</div>
+        <div class="pdesc">โมเดลชั้นบนที่เรียนจากคำทำนายของ base models</div>
+        <div class="ptip">💡 LR เรียบง่ายและกัน overfit — meta-model ซับซ้อนเกินไปไม่จำเป็น</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">CV folds (สร้าง meta-features)</div>
+        <div class="pval">ค่าแนะนำ: 5 – 10 (KFold)</div>
+        <div class="pdesc">จำนวนพับ cross-validation ตอนสร้างคำทำนายบนชุดฝึก</div>
+        <div class="ptip">💡 ต้องทำเสมอ ไม่งั้น meta-model เรียนรู้ว่า base "จำข้อมูลฝึกได้" (data leakage)</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Output type ของ base models</div>
+        <div class="pval">ใช้ predicted probability ไม่ใช่ label ตรง ๆ</div>
+        <div class="pdesc">ความน่าจะเป็นมีข้อมูลมากกว่า (บอกความมั่นใจด้วย)</div>
+        <div class="ptip">💡 ใช้ proba + class ต่อท้ายเป็น feature เพิ่มก็ได้</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Hyperparameter ของแต่ละ base</div>
+        <div class="pval">tuning ปกติของแต่ละโมเดล</div>
+        <div class="pdesc">แต่ละ base ควรถูก tuned ให้ดีพอสมควรก่อนรวม</div>
+        <div class="ptip">💡 ไม่ต้อง perfect — base ที่ overfit เล็กน้อยก็ยังใช้ได้ ถ้าคนละแบบ</div>
+      </div>
     </div>
   </section>
 

@@ -34,6 +34,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#86efac;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px}
   .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
@@ -97,6 +103,37 @@
         <li>ไวต่อขนาดของ feature — ต้อง normalize เสมอ</li>
         <li>ปัญหาความหนาแน่นสูง (curse of dimensionality) เมื่อ feature เยอะ</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">kNN มีพารามิเตอร์ไม่กี่ตัว แต่มีผลต่อผลลัพธ์มาก — หน้านี้ลองเลื่อน slider k ได้เลย</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">k (จำนวนเพื่อนบ้าน)</div>
+        <div class="pval">ค่าแนะนำ: 3 – 15 (ลอง 1 – 20)</div>
+        <div class="pdesc">จำนวนเพื่อนบ้านที่โหวต — k เล็ก = ไวต่อ noise, k ใหญ่ = เรียบเกิน</div>
+        <div class="ptip">💡 ใช้ validation set หรือ Cross-Validation หา k ที่ accuracy สูงสุด</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Distance metric</div>
+        <div class="pval">Euclidean / Manhattan / Minkowski</div>
+        <div class="pdesc">วิธีวัดระยะระหว่างจุด</div>
+        <div class="ptip">💡 Manhattan ใช้ได้ดีกับข้อมูลมิติสูง (curse of dimensionality)</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Weight function</div>
+        <div class="pval">uniform / distance</div>
+        <div class="pdesc">'distance' ให้เพื่อนบ้านที่ใกล้มีสิทธิโหวตมากกว่า</div>
+        <div class="ptip">💡 ช่วยเมื่อข้อมูลไม่กระจายสม่ำเสมอ</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Feature scaling</div>
+        <div class="pval">StandardScaler / MinMaxScaler</div>
+        <div class="pdesc">ปรับขนาด feature ก่อนคำนวณระยะทางเสมอ</div>
+        <div class="ptip">💡 ⚠️ ข้อนี้สำคัญที่สุด — ถ้าไม่ scaling feature ที่หน่วยใหญ่จะชนะการคำนวณระยะทั้งหมด</div>
+      </div>
     </div>
   </section>
 

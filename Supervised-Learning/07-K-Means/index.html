@@ -34,6 +34,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#67e8f9;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:13px}
 </style>
@@ -93,6 +99,43 @@
         <li>ไวต่อตำแหน่ง centroid เริ่มต้นและ outlier</li>
         <li>จับกลุ่มรูปทรงแปลก ๆ ไม่ได้ (เช่น รูปจันทร์เสี้ยว)</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">K-Means มีพารามิเตอร์ไม่กี่ตัว แต่การเลือก k คือการตัดสินใจที่สำคัญที่สุด (หน้านี้ลองเปลี่ยน k ผ่าน slider ได้)</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">k (จำนวนกลุ่ม)</div>
+        <div class="pval">ค่าแนะนำ: ใช้ Elbow / Silhouette ช่วยเลือก</div>
+        <div class="pdesc">จำนวน centroid — ต้องระบุล่วงหน้า</div>
+        <div class="ptip">💡 Elbow: หาจุดที่ SSE เริ่มลดช้าลง · Silhouette: ยิ่งใกล้ 1 ยิ่งดี</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">n_init (จำนวนรอบสุ่มเริ่มต้น)</div>
+        <div class="pval">ค่าแนะนำ: 10 – 50</div>
+        <div class="pdesc">สุ่ม centroid เริ่มต้นหลายรอบ เลือกผลที่ดีที่สุด</div>
+        <div class="ptip">💡 ป้องกันการติด local minimum ที่ไม่ดี</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">init method</div>
+        <div class="pval">k-means++ (default) / random</div>
+        <div class="pdesc">วิธีวาง centroid เริ่มต้น — k-means++ กระจายตัวดีกว่า</div>
+        <div class="ptip">💡 k-means++ เร็วกว่าและผลเสถียรกว่า random มาก</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">max_iter</div>
+        <div class="pval">ค่าแนะนำ: 100 – 300</div>
+        <div class="pdesc">จำนวนรอบสูงสุดก่อนหยุด (ปกติลู่เข้าก่อนครบ)</div>
+        <div class="ptip">💡 ถ้ายังไม่ converge ให้เพิ่ม หรือลอง n_init ใหม่</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Feature scaling</div>
+        <div class="pval">StandardScaler / MinMaxScaler</div>
+        <div class="pdesc">ระยะทาง Euclidean ไวต่อขนาดของ feature</div>
+        <div class="ptip">💡 ไม่ scaling = feature หน่วยใหญ่กลบทุกอย่าง</div>
+      </div>
     </div>
   </section>
 

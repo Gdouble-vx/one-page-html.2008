@@ -36,6 +36,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#fecdd3;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -102,6 +108,49 @@
         <li>ต้องใช้ข้อมูลและ GPU จำนวนมหาศาล</li>
         <li>ไม่เข้าใจ "โลกจริง" — หลอน (hallucinate) ได้</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">Transformer มีพารามิเตอร์สถาปัตยกรรมที่ต้องสอดคล้องกัน (เช่น head ต้องหาร d_model ลงตัว)</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">d_model (ขนาด embedding)</div>
+        <div class="pval">ค่าแนะนำ: 256 – 1024</div>
+        <div class="pdesc">มิติของเวกเตอร์ทุกคำ — ยิ่งมากยิ่งจับความหมายลึก</div>
+        <div class="ptip">💡 ใหญ่ = แพงขึ้น O(n·d²) — เริ่ม 512 แล้วปรับ</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Number of heads</div>
+        <div class="pval">ค่าแนะนำ: 8 – 16 (ต้องหาร d_model ลงตัว)</div>
+        <div class="pdesc">จำนวนหัว attention — แต่ละหัวจับความสัมพันธ์ต่างแบบ</div>
+        <div class="ptip">💡 head = d_model ÷ head_dim (เช่น 512÷64 = 8)</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Number of layers</div>
+        <div class="pval">ค่าแนะนำ: 6 – 24 (GPT-3 ใช้ 96)</div>
+        <div class="pdesc">จำนวนบล็อก encoder/decoder ซ้อนกัน</div>
+        <div class="ptip">💡 ลึก = แม่น แต่ฝึกยากขึ้น ต้องมี residual + normalization</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">FFN dimension</div>
+        <div class="pval">ค่าแนะนำ: 4 × d_model</div>
+        <div class="pdesc">ขนาดเลเยอร์ Feed-Forward หลัง attention</div>
+        <div class="ptip">💡 เช่น d_model=512 → FFN=2048 — พารามิเตอร์ส่วนใหญ่อยู่ตรงนี้</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Dropout</div>
+        <div class="pval">ค่าแนะนำ: 0.1</div>
+        <div class="pdesc">กัน overfit ใน attention และ FFN</div>
+        <div class="ptip">💡 0.1 คือค่าเริ่มต้นที่ใช้กันทั่วไปใน paper ดั้งเดิม</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Learning rate + Warmup</div>
+        <div class="pval">lr สูงสุด ~1e-3 (Adam), warmup 4k – 10k steps</div>
+        <div class="pdesc">ค่อย ๆ เพิ่ม lr จาก 0 แล้วลดแบบโคไซน์</div>
+        <div class="ptip">💡 Warmup สำคัญมาก — Transformer ฝึกไม่เสถียรถ้า lr พุ่งทันที</div>
+      </div>
     </div>
   </section>
 

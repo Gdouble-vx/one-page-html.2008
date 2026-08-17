@@ -34,6 +34,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#c7d2fe;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:16px;margin-top:8px;font-size:13px}
   .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px}
@@ -108,6 +114,49 @@
         <li>เป็นกล่องดำ อธิบายยาก (แม้มีเทคนิค visualize)</li>
         <li>ภาพบิดเบี้ยวหรือมุมมองแปลก ๆ ยังทำพลาดได้</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">CNN มีพารามิเตอร์หลายระดับ ตั้งแต่โครงสร้าง (architecture) จนถึงการฝึก (training)</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">Filters ต่อ Conv layer</div>
+        <div class="pval">ค่าแนะนำ: 32 → 64 → 128 เพิ่มตามความลึก</div>
+        <div class="pdesc">จำนวน kernel แต่ละชั้น — แต่ละตัวจับคุณลักษณะต่างกัน</div>
+        <div class="ptip">💡 เริ่ม 32 แล้วเพิ่มทีละเท่าตัว — เยอะเกิน = ช้าและ overfit</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Kernel size</div>
+        <div class="pval">ค่าแนะนำ: 3×3 (นิยมสุด)</div>
+        <div class="pdesc">ขนาดเลนส์สแกน — ใหญ่ขึ้นมองพื้นที่กว้างขึ้น</div>
+        <div class="ptip">💡 5×5/7×7 ใช้เฉพาะชั้นแรก — 3×3 ซ้อนหลายชั้นได้ผลเทียบเท่าและประหยัดกว่า</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Stride & Padding</div>
+        <div class="pval">stride=1, padding='same' (นิยม)</div>
+        <div class="pdesc">ระยะเลื่อน kernel และการเติมขอบภาพ</div>
+        <div class="ptip">💡 stride=2 ลดขนาดภาพเร็วแต่เสียรายละเอียด</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Pooling size</div>
+        <div class="pval">MaxPool 2×2 (default)</div>
+        <div class="pdesc">ลดขนาดภาพเหลือค่าที่เด่นที่สุด</div>
+        <div class="ptip">💡 ใหญ่เกินไป (เช่น 4×4) → ข้อมูลหายเยอะเกิน</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Learning rate / Optimizer</div>
+        <div class="pval">Adam lr=1e-3, ลดลงเมื่อ plateau</div>
+        <div class="pdesc">ความเร็วการฝึกของโครงข่าย</div>
+        <div class="ptip">💡 ใช้ learning rate scheduler (ลดทุก N epochs) จะได้ผลดีกว่า lr คงที่</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Data augmentation</div>
+        <div class="pval">flip, rotate, zoom, crop</div>
+        <div class="pdesc">สร้างข้อมูลฝึกเพิ่มจากภาพเดิม</div>
+        <div class="ptip">💡 วิธีลด overfit ที่ได้ผลที่สุดสำหรับงานภาพ</div>
+      </div>
     </div>
   </section>
 

@@ -37,6 +37,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#f5d0fe;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -99,6 +105,49 @@
         <li>พารามิเตอร์เยอะ ใช้หน่วยความจำสูง</li>
         <li>Transformer แซงหน้าในงานภาษาแล้ว (แต่ LSTM ยังใช้ในบางงาน)</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">LSTM ต้องปรับทั้งขนาดโมเดลและรูปแบบข้อมูลลำดับ (sequence) — หน้านี้ใช้หน่วยความจำแบบ fixed-weight</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">Hidden units (ขนาดความจำ)</div>
+        <div class="pval">ค่าแนะนำ: 32 – 256</div>
+        <div class="pdesc">ขนาดของ cell state / hidden state — ยิ่งมากยิ่งจำรายละเอียดได้</div>
+        <div class="ptip">💡 มากเกิน = overfit + ฝึกช้า · เริ่ม 64 แล้วปรับ</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Number of layers</div>
+        <div class="pval">ค่าแนะนำ: 1 – 3</div>
+        <div class="pdesc">จำนวนชั้น LSTM ซ้อนกัน — เรียนรู้ลำดับชั้นของความหมาย</div>
+        <div class="ptip">💡 เกิน 3 ชั้นมักไม่ได้ประโยชน์และฝึกยากขึ้น</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Sequence length (lookback)</div>
+        <div class="pval">ขึ้นกับข้อมูล — เช่น 60 วันย้อนหลัง</div>
+        <div class="pdesc">จำนวน timestep ที่ป้อนต่อตัวอย่าง</div>
+        <div class="ptip">💡 ยาวเกิน = ข้อมูลเก่าไม่เกี่ยวข้อง + ฝึกช้า · สั้นเกิน = ไม่เห็น pattern</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Learning rate</div>
+        <div class="pval">ค่าแนะนำ: 0.001 (Adam)</div>
+        <div class="pdesc">ขนาดก้าวการอัปเดตน้ำหนัก</div>
+        <div class="ptip">💡 LSTM อ่อนไหวต่อ lr — เริ่ม 1e-3 แล้วปรับลง</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Dropout</div>
+        <div class="pval">ค่าแนะนำ: 0.2 – 0.5</div>
+        <div class="pdesc">กัน overfit โดยสุ่มปิดเซลล์ตอนฝึก</div>
+        <div class="ptip">💡 ใช้ recurrent_dropout เมื่อ data เยอะ / overfit</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Batch size</div>
+        <div class="pval">ค่าแนะนำ: 16 – 128</div>
+        <div class="pdesc">จำนวนตัวอย่างต่อรอบอัปเดต</div>
+        <div class="ptip">💡 ใหญ่ขึ้น = ฝึกเร็วขึ้น แต่ generalization อาจแย่ลง</div>
+      </div>
     </div>
   </section>
 

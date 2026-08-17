@@ -37,6 +37,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#c7d2fe;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -97,6 +103,43 @@
         <li>ไม่เสถียร: ข้อมูลเปลี่ยนนิดเดียว ต้นไม้อาจเปลี่ยนทั้งต้น</li>
         <li>เส้นแบ่งเป็นแนวตั้ง/แนวนอนเท่านั้น (axis-aligned)</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">พารามิเตอร์ที่ควบคุมการเติบโตของต้นไม้ — ปรับเพื่อสมดุลระหว่าง underfit กับ overfit (หน้านี้ลองกด "เพิ่มความลึก" ดู)</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">max_depth (ความลึกสูงสุด)</div>
+        <div class="pval">ค่าแนะนำ: 3 – 20</div>
+        <div class="pdesc">จำนวนชั้นการแบ่งสูงสุด — ลึก = ฟิตข้อมูลมากเกินง่าย</div>
+        <div class="ptip">💡 เริ่ม 5 แล้วเพิ่ม จน validation error เริ่มขึ้น = ตรงนั้น overfit แล้ว</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">min_samples_split</div>
+        <div class="pval">ค่าแนะนำ: 2 – 20</div>
+        <div class="pdesc">จำนวนข้อมูลขั้นต่ำก่อนจะแบ่งต่อได้</div>
+        <div class="ptip">💡 ใหญ่ขึ้น → ต้นไม้เล็ก เรียบง่าย ลด overfit</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">min_samples_leaf</div>
+        <div class="pval">ค่าแนะนำ: 1 – 10</div>
+        <div class="pdesc">จำนวนข้อมูลขั้นต่ำในโหนดปลาย</div>
+        <div class="ptip">💡 ป้องกันโหนดปลายที่จำข้อมูลจุดเดียว (memorize)</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">criterion (เกณฑ์แบ่ง)</div>
+        <div class="pval">gini / entropy</div>
+        <div class="pdesc">ตัววัดความบริสุทธิ์ของกลุ่มหลังแบ่ง</div>
+        <div class="ptip">💡 ผลต่างไม่มากนัก — ลองทั้งสองแล้วเลือกที่ดีกว่า</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">max_features</div>
+        <div class="pval">ค่าแนะนำ: 'sqrt' หรือ 'log2' ของจำนวน feature</div>
+        <div class="pdesc">สุ่มเลือก feature จำนวนจำกัดตอนแบ่งแต่ละโหนด</div>
+        <div class="ptip">💡 ลดลง → ต้นไม้แต่ละต้นต่างกันมากขึ้น (ดีตอน ensemble)</div>
+      </div>
     </div>
   </section>
 

@@ -35,6 +35,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#f9a8d4;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
 </style>
 </head>
@@ -96,6 +102,49 @@
         <li>เป็น "กล่องดำ" — อธิบายว่าทำไมถึงตัดสินใจแบบนั้นยาก</li>
         <li>ต้องปรับ hyperparameter หลายตัว (layer, neuron, learning rate)</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">MLP มีพารามิเตอร์เยอะที่สุด — เริ่มจากโครงสร้างเล็ก ๆ แล้วค่อยเพิ่ม (หน้านี้ใช้ 2 hidden nodes, lr=0.5)</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">Hidden layers & neurons</div>
+        <div class="pval">ค่าแนะนำ: (64, 32) → (128, 64) ไล่ขึ้น</div>
+        <div class="pdesc">จำนวนชั้นและเซลล์ต่อชั้น — กำหนดความสามารถในการเรียนรู้</div>
+        <div class="ptip">💡 เริ่มเล็กแล้วเพิ่มจน validation error หยุดดีขึ้น — ใหญ่เกิน = overfit</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Activation function</div>
+        <div class="pval">ReLU (นิยม) / tanh / sigmoid</div>
+        <div class="pdesc">ฟังก์ชันไม่เป็นเส้นตรงระหว่างชั้น</div>
+        <div class="ptip">💡 ReLU เร็วและแก้ vanishing gradient ได้ดีที่สุดในทางปฏิบัติ</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Learning rate</div>
+        <div class="pval">ค่าแนะนำ: 0.0001 – 0.01 (Adam)</div>
+        <div class="pdesc">ขนาดก้าวการอัปเดตน้ำหนัก</div>
+        <div class="ptip">💡 ใหญ่เกิน → loss พุ่ง/แกว่ง · เล็กเกิน → ไม่คืบหน้า</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Optimizer</div>
+        <div class="pval">Adam (default) / SGD + momentum</div>
+        <div class="pdesc">อัลกอริทึมปรับน้ำหนัก</div>
+        <div class="ptip">💡 Adam ใช้ได้แทบทุกงาน — SGD ต้องปรับ lr ให้ดีกว่า</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Batch size</div>
+        <div class="pval">ค่าแนะนำ: 16 – 256</div>
+        <div class="pdesc">จำนวนตัวอย่างต่อรอบการอัปเดต</div>
+        <div class="ptip">💡 เล็ก = อัปเดตบ่อย noisy · ใหญ่ = เรียบ แต่ใช้หน่วยความจำมาก</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Dropout / Weight decay</div>
+        <div class="pval">dropout: 0.2 – 0.5 · decay: 1e-5 – 1e-3</div>
+        <div class="pdesc">เทคนิคลด overfit</div>
+        <div class="ptip">💡 ใช้เมื่อ validation error สูงกว่าชุดฝึกมาก</div>
+      </div>
     </div>
   </section>
 

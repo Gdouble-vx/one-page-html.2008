@@ -33,6 +33,12 @@
   .pros h3{color:#34d399}.cons h3{color:#f87171}
   .formula{background:#1e293b;padding:14px 18px;border-radius:8px;font-family:'Consolas',monospace;font-size:16px;color:#86efac;margin:14px 0;overflow-x:auto}
   footer{text-align:center;padding:24px;opacity:.5;font-size:13px}
+  .param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px}
+  .param-card{background:#111c33;border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:10px;padding:14px 16px}
+  .param-card .pname{font-weight:700;font-size:15px}
+  .param-card .pval{font-size:12px;color:#38bdf8;margin:4px 0;font-family:Consolas,monospace}
+  .param-card .pdesc{font-size:13px;opacity:.8;line-height:1.5}
+  .param-card .ptip{font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed #334155;opacity:.85}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px}
 </style>
@@ -98,6 +104,43 @@
         <li>ออกแบบ reward function ยาก (reward hacking)</li>
         <li>ไม่เสถียร — ใช้ในโลกจริง (เช่น หุ่นยนต์) เสี่ยงอันตราย</li>
       </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚙️ Parameter Tuning</h2>
+    <p class="lead">Q-Learning พึ่งพาพารามิเตอร์ไม่กี่ตัว + การออกแบบรางวัล (reward) — หน้านี้ใช้ α=0.15, γ=0.98, ε เริ่ม 1.0 ลด 0.9995</p>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="pname">Learning rate (α)</div>
+        <div class="pval">ค่าแนะนำ: 0.1 – 0.5</div>
+        <div class="pdesc">ความเร็วในการอัปเดตค่า Q — ใหญ่ = เชื่อประสบการณ์ล่าสุดมาก</div>
+        <div class="ptip">💡 ใหญ่เกิน → แกว่ง · เล็กเกิน → เรียนรู้ช้า (ตาราง Q ใหญ่ควรใช้ α เล็ก)</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Discount factor (γ)</div>
+        <div class="pval">ค่าแนะนำ: 0.9 – 0.99</div>
+        <div class="pdesc">ให้น้ำหนักรางวัลอนาคต — ใกล้ 1 = มองไกล มองหาทางลัดระยะยาว</div>
+        <div class="ptip">💡 γ=0 → สนใจแต่รางวัลทันที · γ=1 → รางวัลอนาคตสำคัญเท่ารางวัลปัจจุบัน</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Exploration rate (ε)</div>
+        <div class="pval">เริ่ม 1.0 → ลดเหลือ 0.05 – 0.1</div>
+        <div class="pdesc">ความน่าจะเป็นที่จะสุ่มเดินแทนเลือกทางที่ดีที่สุด</div>
+        <div class="ptip">💡 ต้องมี exploration เสมอ (ε ต่ำ ๆ) ไม่งั้นพลาดทางที่ดีกว่า</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Epsilon decay</div>
+        <div class="pval">ค่าแนะนำ: 0.999 – 0.9999 ต่อ episode</div>
+        <div class="pdesc">ความเร็วที่ ε ลดลง — ยิ่งช้ายิ่งสำรวจนาน</div>
+        <div class="ptip">💡 ลดเร็วเกิน → ติดพฤติกรรมแรก ๆ ที่ไม่ดี · ลดช้าเกิน → เสียเวลา</div>
+      </div>
+      <div class="param-card">
+        <div class="pname">Reward design</div>
+        <div class="pval">เช่น เป้า +10, ชนกำแพง −1, เดินปกติ −0.04</div>
+        <div class="pdesc">การให้รางวัล — หัวใจของ RL ที่คนมองข้าม</div>
+        <div class="ptip">💡 ลงโทษเล็กน้อยต่อก้าว → เอเจนต์หาทางที่สั้นที่สุด · ระวัง reward hacking</div>
+      </div>
     </div>
   </section>
 
